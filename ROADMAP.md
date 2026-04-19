@@ -1,0 +1,50 @@
+# Development Roadmap
+
+## Publication to pub.dev [§3]
+
+The monorepo, per-package sources, workspace bootstrap, and SPECs
+are landed. The remaining work gets the four packages onto pub.dev
+so external consumers (starting with rove's
+`swap-to-pub-dev-deps` workstream) can depend on hosted versions
+instead of git sources.
+
+- **pubspec-publish-prep**: In each of the four packages, remove
+  `publish_to: none` from `pubspec.yaml`. Add `homepage`,
+  `repository`, `issue_tracker`, and `topics` metadata. Run
+  `dart pub publish --dry-run` in each and resolve any findings
+  (description length, missing README/CHANGELOG, missing example,
+  etc.). `line_snap_scroll_physics` and `fixed_line_view` already
+  have READMEs; `sticky_hierarchical_scroll` already ships an
+  example; `repl_view` and `line_snap_scroll_physics` do not ship
+  examples and should add minimal ones if `dart pub publish`
+  requires them for score.
+- **ci-workflow**: GitHub Actions workflow running
+  `dart analyze --fatal-infos`,
+  `dart format --output=none --set-exit-if-changed .`, and
+  `flutter test` on every push and PR. Matrix across the four
+  packages for per-package isolation. Conventional Commits lint
+  gate on PR (release tooling consumes commit messages). Depends
+  on pubspec-publish-prep.
+- **release-tooling**: Wire release-please (preferred — handles
+  per-package versioning via release-please-manifest) for
+  automated version bumps, `CHANGELOG.md` generation, tag
+  creation, and pub.dev publishing on merge to main. Configure
+  the four packages as independent release components. Depends
+  on ci-workflow.
+- **first-publication**: Publish `0.1.0` of each package to
+  pub.dev in topological order: `line_snap_scroll_physics` first,
+  `sticky_hierarchical_scroll` and `fixed_line_view` in parallel,
+  `repl_view` last. Verify each via `dart pub add <package>` in a
+  scratch project between publishes. Depends on release-tooling.
+  Closes section.
+
+**Verify:** After first-publication lands, each of the four
+packages appears on pub.dev at
+`https://pub.dev/packages/<name>` with its documented description,
+README, dependency graph, and per-package `CHANGELOG.md`. `dart
+pub add line_snap_scroll_physics` in a scratch Flutter project
+resolves successfully and `import
+'package:line_snap_scroll_physics/line_snap_scroll_physics.dart'`
+compiles. Rove's `swap-to-pub-dev-deps` workstream (tracked in
+[rove's ROADMAP](https://github.com/repentsinner/rove/blob/main/ROADMAP.md))
+becomes unblocked.
