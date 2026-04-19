@@ -36,11 +36,10 @@ line_snap_scroll_physics
 ```
 
 Publication order must match topological order: the base physics
-package publishes first, the two direct consumers next (parallelizable),
-the transitive consumer last. During development, inter-package
-dependencies resolve through the root Dart workspace via `path:`
-declarations; at publication time those swap to pub.dev version
-constraints.
+package first, the two direct consumers next (parallelizable), the
+transitive consumer last. Publishing an upstream package with a
+dependency on an unpublished package fails the pub.dev resolver, so
+order is load-bearing, not merely tidy.
 
 ## 3. Publication Model
 
@@ -52,9 +51,9 @@ are stable enough to use, but expect breakage until validated by
 real consumers." Version `1.0.0` signals API commitment once at
 least one external consumer has validated the shape.
 
-Packages are versioned independently: a bug fix in `repl_view` does
-not bump `line_snap_scroll_physics`. Release tooling (release-please
-or Melos publish) produces per-package `CHANGELOG.md` files.
+Packages version independently: a bug fix in `repl_view` does not
+bump `line_snap_scroll_physics`. Each package carries its own
+`CHANGELOG.md` tracking only its own history.
 
 `dart pub publish --dry-run` is the gate — each package must be
 independently publishable before any is published. Rationale: a
