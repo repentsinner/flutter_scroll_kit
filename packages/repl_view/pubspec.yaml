@@ -1,0 +1,23 @@
+name: repl_view
+description: >-
+  Generic REPL-style scroll view for Flutter. Input lines pin as sticky
+  section headers; response lines scroll as leaves within each section.
+  Repeated identical responses coalesce with a count badge.
+version: 0.1.0
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  sticky_hierarchical_scroll:
+    path: ../sticky_hierarchical_scroll
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

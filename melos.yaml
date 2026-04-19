@@ -1,0 +1,22 @@
+name: flutter_scroll_kit
+
+packages:
+  - packages/*
+
+command:
+  bootstrap:
+    environment:
+      sdk: ^3.10.0
+    dev_dependencies:
+      flutter_lints: ^6.0.0
+
+scripts:
+  analyze:
+    run: melos exec -c 1 -- dart analyze --fatal-infos
+    description: Run `dart analyze` in every package.
+  test:
+    run: melos exec -c 1 -- flutter test
+    description: Run `flutter test` in every package that has tests.
+  format-check:
+    run: melos exec -c 1 -- dart format --output=none --set-exit-if-changed .
+    description: Verify every package is correctly formatted.
