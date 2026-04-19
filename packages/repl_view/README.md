@@ -22,11 +22,14 @@ class MyEntry implements ConsoleEntry {
   final String coalescingKey;
   @override
   final int count;
+  @override
+  final Object identity;
 
   MyEntry({
     required this.value,
     required this.isInput,
     required this.coalescingKey,
+    required this.identity,
     this.count = 1,
   });
 }
@@ -62,6 +65,7 @@ ReplView<MyEntry>(
 | `ConsoleEntry.isInput` | `true` pins the row as a sticky section header |
 | `ConsoleEntry.coalescingKey` | Consumer-owned grouping key (informational) |
 | `ConsoleEntry.count` | Number of coalesced occurrences; the row builder renders a badge when > 1 |
+| `ConsoleEntry.identity` | Stable identity used as the scroll anchor across coalescing and list rebuilds. Typically a monotonic `int` assigned when the message is created and preserved across coalescing updates. |
 
 ## Features
 
@@ -70,9 +74,16 @@ ReplView<MyEntry>(
 - **Coalescing display** — consumer-supplied `count > 1` on an entry
   lets the `entryBuilder` render a count badge, keeping the
   scrollback compact.
-- **Auto-scroll** — new entries jump the view to the bottom unless
-  the user has manually scrolled away. Auto-scroll resumes once the
-  user returns to the bottom.
+- **Identity-anchored viewport** — two observable states:
+  - **Stuck to bottom** (default): new entries, coalescing updates,
+    parent rebuilds, and tab detach/reattach all resettle to the
+    bottom.
+  - **Floating**: when the user drags away from the bottom, the
+    viewport pins to a specific entry by `identity` plus a pixel
+    offset within it. Tail appends and coalescing leave the pinned
+    content unchanged. When the anchor entry is trimmed from the
+    consumer's scrollback, the view snaps back to the bottom and
+    returns to stuck.
 - **Trailing items** — optional prompt line, separators, or status
   text scroll with the content rather than pinning as a footer.
 
