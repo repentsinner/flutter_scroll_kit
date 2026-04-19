@@ -7,7 +7,7 @@ use. The repo owns packaging, dependency graph, and publication
 concerns; per-package internal design, API, and algorithms are
 governed by each package's own `SPEC.md` under `packages/<name>/`.
 
-## 1. Packages
+## 1. Packages §spec:packages
 
 *Status: complete*
 
@@ -24,7 +24,7 @@ governs its internal design:
 All four target pure Flutter — no third-party runtime dependencies.
 Dev dependencies are limited to `flutter_lints` and `flutter_test`.
 
-## 2. Dependency Graph
+## 2. Dependency Graph §spec:dependency-graph
 
 *Status: complete*
 
@@ -41,7 +41,7 @@ transitive consumer last. Publishing an upstream package with a
 dependency on an unpublished package fails the pub.dev resolver, so
 order is load-bearing, not merely tidy.
 
-## 3. Publication Model
+## 3. Publication Model §spec:publication-model
 
 *Status: in progress*
 
@@ -60,7 +60,7 @@ independently publishable before any is published. Rationale: a
 partially-published dependency graph is harder to recover from than
 a failed dry-run on the first package.
 
-## 4. Development Workflow
+## 4. Development Workflow §spec:development-workflow
 
 *Status: complete*
 
@@ -75,7 +75,7 @@ every script has a direct `dart` equivalent that works from any
 package directory. Contributors without Melos installed can still
 develop and test.
 
-## 5. Origin and License
+## 5. Origin and License §spec:origin-and-license
 
 *Status: complete*
 

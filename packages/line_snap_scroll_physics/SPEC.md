@@ -7,7 +7,7 @@ pixel update during drag, fling, and programmatic scroll, plus a
 
 ---
 
-## 1. Problem Statement
+## 1. Problem Statement §spec:lssp-problem-statement
 
 *Status: complete*
 
@@ -23,7 +23,7 @@ supported way to get line-snapping physics. See
 
 ---
 
-## 2. Scope
+## 2. Scope §spec:lssp-scope
 
 *Status: complete*
 
@@ -40,7 +40,7 @@ Pure Flutter. No project-specific code.
 
 ---
 
-## 3. Why Not Framework or Community Alternatives
+## 3. Why Not Framework or Community Alternatives §spec:lssp-why-not-alternatives
 
 *Status: complete*
 
@@ -58,7 +58,7 @@ the framework restriction without blocking on an upstream fix.
 
 ---
 
-## 4. API Surface
+## 4. API Surface §spec:lssp-api-surface
 
 *Status: complete*
 
@@ -103,7 +103,7 @@ alone or both together. Using both is the strongest guarantee:
 
 ---
 
-## 5. Snap Alignment
+## 5. Snap Alignment §spec:lssp-snap-alignment
 
 *Status: complete*
 
@@ -119,7 +119,7 @@ run before layout, so `LineSnapScrollPhysics` does not need a fallback.
 
 ---
 
-## 6. Mode Switching
+## 6. Mode Switching §spec:lssp-mode-switching
 
 *Status: complete*
 
@@ -133,7 +133,7 @@ positions, it passes a plain `ScrollController` instead.
 
 ---
 
-## 7. Testing Strategy
+## 7. Testing Strategy §spec:lssp-testing-strategy
 
 *Status: complete*
 

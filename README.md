@@ -19,7 +19,7 @@ API. Per-package governance, not root-governed.
 
 ## Dependency graph
 
-```
+```text
 line_snap_scroll_physics ──┬── sticky_hierarchical_scroll ── repl_view
                            └── fixed_line_view
 ```

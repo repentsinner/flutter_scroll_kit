@@ -6,7 +6,7 @@ sticky section headers over the responses they produced.
 
 ---
 
-## 1. Problem Statement
+## 1. Problem Statement §spec:repl-problem-statement
 
 *Status: complete*
 
@@ -32,7 +32,7 @@ behavior needed for coalesced updates.
 
 ---
 
-## 2. Scope
+## 2. Scope §spec:repl-scope
 
 *Status: complete*
 
@@ -54,7 +54,7 @@ Generic over `T extends ConsoleEntry`. Pure Flutter. Depends on
 
 ---
 
-## 3. Why Extract
+## 3. Why Extract §spec:repl-why-extract
 
 *Status: complete*
 
@@ -72,7 +72,7 @@ widget.
 
 ---
 
-## 4. Entry Contract
+## 4. Entry Contract §spec:repl-entry-contract
 
 *Status: complete*
 
@@ -99,7 +99,7 @@ the widget does not inspect it. Coalescing already happened upstream.
 
 ---
 
-## 5. Viewport State Machine
+## 5. Viewport State Machine §spec:repl-viewport-state
 
 *Status: complete*
 
@@ -134,7 +134,7 @@ with every update.
 
 ---
 
-## 6. Layering
+## 6. Layering §spec:repl-layering
 
 *Status: complete*
 
@@ -154,7 +154,7 @@ sticky-header rendering, so a single builder covers both.
 
 ---
 
-## 7. API Surface
+## 7. API Surface §spec:repl-api-surface
 
 *Status: complete*
 
@@ -181,7 +181,7 @@ enforced by assertion.
 
 ---
 
-## 8. Testing Strategy
+## 8. Testing Strategy §spec:repl-testing-strategy
 
 *Status: complete*
 
