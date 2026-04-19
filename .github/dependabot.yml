@@ -1,0 +1,56 @@
+version: 2
+
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+      - github-actions
+    groups:
+      github-actions:
+        patterns: ["*"]
+
+  - package-ecosystem: pub
+    directory: /
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+      - dart
+    groups:
+      dart-deps:
+        patterns: ["*"]
+
+  - package-ecosystem: pub
+    directory: /packages/line_snap_scroll_physics
+    schedule:
+      interval: weekly
+    groups:
+      dart-deps:
+        patterns: ["*"]
+
+  - package-ecosystem: pub
+    directory: /packages/sticky_hierarchical_scroll
+    schedule:
+      interval: weekly
+    groups:
+      dart-deps:
+        patterns: ["*"]
+
+  - package-ecosystem: pub
+    directory: /packages/fixed_line_view
+    schedule:
+      interval: weekly
+    groups:
+      dart-deps:
+        patterns: ["*"]
+
+  - package-ecosystem: pub
+    directory: /packages/repl_view
+    schedule:
+      interval: weekly
+    groups:
+      dart-deps:
+        patterns: ["*"]

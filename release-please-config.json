@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "ac26671accb05c16443b93dd85dc89e554ad941a",
+  "separate-pull-requests": false,
+  "include-component-in-tag": true,
+  "bump-minor-pre-major": true,
+  "bump-patch-for-minor-pre-major": true,
+  "packages": {
+    "packages/line_snap_scroll_physics": {
+      "release-type": "dart",
+      "component": "line_snap_scroll_physics",
+      "package-name": "line_snap_scroll_physics"
+    },
+    "packages/sticky_hierarchical_scroll": {
+      "release-type": "dart",
+      "component": "sticky_hierarchical_scroll",
+      "package-name": "sticky_hierarchical_scroll"
+    },
+    "packages/fixed_line_view": {
+      "release-type": "dart",
+      "component": "fixed_line_view",
+      "package-name": "fixed_line_view"
+    },
+    "packages/repl_view": {
+      "release-type": "dart",
+      "component": "repl_view",
+      "package-name": "repl_view"
+    }
+  }
+}
