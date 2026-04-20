@@ -12,6 +12,10 @@ updates:
       github-actions:
         patterns: ["*"]
 
+  # Dart 3.6+ workspace: dependency_services rejects per-package
+  # invocations with "Only apply dependency_services to the root of
+  # the workspace." The root entry covers all workspace members via
+  # the shared pubspec.lock.
   - package-ecosystem: pub
     directory: /
     schedule:
@@ -19,38 +23,6 @@ updates:
     labels:
       - dependencies
       - dart
-    groups:
-      dart-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: pub
-    directory: /packages/line_snap_scroll_physics
-    schedule:
-      interval: weekly
-    groups:
-      dart-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: pub
-    directory: /packages/sticky_hierarchical_scroll
-    schedule:
-      interval: weekly
-    groups:
-      dart-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: pub
-    directory: /packages/fixed_line_view
-    schedule:
-      interval: weekly
-    groups:
-      dart-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: pub
-    directory: /packages/repl_view
-    schedule:
-      interval: weekly
     groups:
       dart-deps:
         patterns: ["*"]
