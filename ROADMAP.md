@@ -8,18 +8,6 @@ work gets the four packages onto pub.dev so external consumers
 (starting with rove's `swap-to-pub-dev-deps` workstream) can depend
 on hosted versions instead of git sources.
 
-### §road:pubspec-publish-prep
-
-In each of the four packages, remove `publish_to: none` from
-`pubspec.yaml`. Add `homepage`, `repository`, `issue_tracker`, and
-`topics` metadata. Run `dart pub publish --dry-run` in each and
-resolve any findings (description length, missing README/CHANGELOG,
-missing example, etc.). `line_snap_scroll_physics` and
-`fixed_line_view` already have READMEs; `sticky_hierarchical_scroll`
-already ships an example; `repl_view` and `line_snap_scroll_physics`
-do not ship examples and should add minimal ones if `dart pub
-publish` requires them for score.
-
 ### §road:ci-workflow
 
 GitHub Actions workflow running `dart analyze --fatal-infos`,

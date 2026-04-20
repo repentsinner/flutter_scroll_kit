@@ -6,6 +6,9 @@ analyzer:
     strict-inference: true
     strict-raw-types: true
   errors:
+    # Path dep on line_snap_scroll_physics is intentional until the
+    # whole set publishes to pub.dev (see §road:first-publication).
+    invalid_dependency: ignore
     prefer_single_quotes: error
     file_names: error
     unawaited_futures: error

@@ -1,0 +1,15 @@
+name: repl_view_example
+description: Demo app for repl_view.
+publish_to: none
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  repl_view:
+    path: ../
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
