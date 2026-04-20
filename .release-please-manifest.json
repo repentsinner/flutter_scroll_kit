@@ -1,0 +1,6 @@
+{
+  "packages/line_snap_scroll_physics": "0.1.0",
+  "packages/sticky_hierarchical_scroll": "0.1.0",
+  "packages/fixed_line_view": "0.1.0",
+  "packages/repl_view": "0.1.0"
+}
