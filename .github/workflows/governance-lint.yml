@@ -6,6 +6,6 @@ on:
 
 jobs:
   lint:
-    uses: repentsinner/symphonize/.github/workflows/governance-lint.yml@v1
+    uses: repentsinner/symphonize/.github/workflows/governance-lint.yml@v0
     with:
       readme-type: ""
