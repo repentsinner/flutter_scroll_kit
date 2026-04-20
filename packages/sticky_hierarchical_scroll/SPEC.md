@@ -7,7 +7,7 @@ structures.
 
 ---
 
-## 1. Problem Statement
+## 1. Problem Statement §spec:shs-problem-statement
 
 *Status: complete*
 
@@ -25,7 +25,7 @@ push-out.
 
 ---
 
-## 2. Scope
+## 2. Scope §spec:shs-scope
 
 *Status: complete*
 
@@ -44,7 +44,7 @@ Generic over item type `T`. Pure Flutter. No project-specific code.
 
 ---
 
-## 3. Why Slot-Fit
+## 3. Why Slot-Fit §spec:shs-why-slot-fit
 
 *Status: complete*
 
@@ -66,7 +66,7 @@ Slot-fit also gives a bounded, predictable overlay: at most
 
 ---
 
-## 4. Algorithm
+## 4. Algorithm §spec:shs-algorithm
 
 *Status: complete*
 
@@ -98,7 +98,7 @@ out rather than holding fixed height and snapping.
 
 ---
 
-## 5. Height Modes
+## 5. Height Modes §spec:shs-height-modes
 
 *Status: complete*
 
@@ -118,7 +118,7 @@ construction fills both.
 
 ---
 
-## 6. Overlay Composition
+## 6. Overlay Composition §spec:shs-overlay-composition
 
 *Status: complete*
 
@@ -135,7 +135,7 @@ different theme pass their own decoration.
 
 ---
 
-## 7. Navigation
+## 7. Navigation §spec:shs-navigation
 
 *Status: complete*
 
@@ -147,7 +147,7 @@ not animate or jump the scroll position itself.
 
 ---
 
-## 8. Trailing Items
+## 8. Trailing Items §spec:shs-trailing-items
 
 *Status: complete*
 
@@ -159,7 +159,7 @@ stream.
 
 ---
 
-## 9. API Surface
+## 9. API Surface §spec:shs-api-surface
 
 *Status: complete*
 
@@ -208,7 +208,7 @@ class StickyHierarchicalScrollView<T> extends StatefulWidget {
 
 ---
 
-## 10. Testing Strategy
+## 10. Testing Strategy §spec:shs-testing-strategy
 
 *Status: complete*
 

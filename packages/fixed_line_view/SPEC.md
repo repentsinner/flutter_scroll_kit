@@ -7,7 +7,7 @@ code views, and log streams.
 
 ---
 
-## 1. Problem Statement
+## 1. Problem Statement §spec:flv-problem-statement
 
 *Status: complete*
 
@@ -30,7 +30,7 @@ extracts the common shape into two widgets (`FixedLineView`,
 
 ---
 
-## 2. Scope
+## 2. Scope §spec:flv-scope
 
 *Status: complete*
 
@@ -48,7 +48,7 @@ line-snap mode.
 
 ---
 
-## 3. Why Not Community Packages
+## 3. Why Not Community Packages §spec:flv-why-not-community
 
 *Status: complete*
 
@@ -68,7 +68,7 @@ keep their own rendering.
 
 ---
 
-## 4. Widgets
+## 4. Widgets §spec:flv-widgets
 
 *Status: complete*
 
@@ -89,7 +89,7 @@ not pass one in, and disposes only what it owns.
 
 ---
 
-## 5. Auto-Scroll State Machine
+## 5. Auto-Scroll State Machine §spec:flv-auto-scroll
 
 *Status: complete*
 
@@ -111,7 +111,7 @@ respects only explicit programmatic scroll.
 
 ---
 
-## 6. Line Snap
+## 6. Line Snap §spec:flv-line-snap
 
 *Status: complete*
 
@@ -128,7 +128,7 @@ consumers enable it for visual parity with terminal scrollbars.
 
 ---
 
-## 7. Composition with Sticky Scroll
+## 7. Composition with Sticky Scroll §spec:flv-composition
 
 *Status: complete*
 
@@ -147,7 +147,7 @@ same controller."
 
 ---
 
-## 8. API Surface
+## 8. API Surface §spec:flv-api-surface
 
 *Status: complete*
 
@@ -196,7 +196,7 @@ final class FixedLineViewController {
 
 ---
 
-## 9. Testing Strategy
+## 9. Testing Strategy §spec:flv-testing-strategy
 
 *Status: complete*
 

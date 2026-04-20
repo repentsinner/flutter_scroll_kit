@@ -1,0 +1,30 @@
+{
+  "config": {
+    // MD007: unordered list indent — sub-lists under numbered items use a
+    // 3-space continuation indent, which conflicts with the default.
+    "MD007": false,
+    // MD013: line length — specs and roadmaps use long descriptive lines.
+    "MD013": false,
+    // MD024: duplicate headings — numbered sections may reuse heading text.
+    "MD024": false,
+    // MD033: inline HTML — disabled as precaution.
+    "MD033": false,
+    // MD036: emphasis as heading — false positive on SPEC.md *Status: ...*
+    // lines, which are structured metadata, not heading substitutes.
+    "MD036": false,
+    // MD060: table column style — flags compact pipe-delimited tables.
+    // Disable until tables are reformatted in a dedicated pass.
+    "MD060": false
+  },
+  "ignores": [
+    "**/build/**",
+    "**/node_modules/**",
+    "**/.dart_tool/**",
+    "**/example/ios/**",
+    "**/example/android/**",
+    "**/example/macos/**",
+    "**/example/linux/**",
+    "**/example/windows/**",
+    "**/example/web/**"
+  ]
+}
