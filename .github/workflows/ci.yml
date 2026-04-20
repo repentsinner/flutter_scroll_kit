@@ -52,11 +52,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # fixed_line_view and repl_view carry path dependencies on
+        # sibling packages until §road:pubspec-publish-prep converts
+        # them to hosted sources. dart pub publish --dry-run rejects
+        # path deps, so those packages join the matrix once that
+        # workstream lands.
         package:
           - line_snap_scroll_physics
           - sticky_hierarchical_scroll
-          - fixed_line_view
-          - repl_view
 
     steps:
       - uses: actions/checkout@v4
