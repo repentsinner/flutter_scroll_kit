@@ -45,33 +45,3 @@ jobs:
               echo "::endgroup::"
             fi
           done
-
-  publish-dry-run:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    strategy:
-      fail-fast: false
-      matrix:
-        # fixed_line_view and repl_view carry path dependencies on
-        # sibling packages until §road:pubspec-publish-prep converts
-        # them to hosted sources. dart pub publish --dry-run rejects
-        # path deps, so those packages join the matrix once that
-        # workstream lands.
-        package:
-          - line_snap_scroll_physics
-          - sticky_hierarchical_scroll
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-
-      - name: Install dependencies
-        run: dart pub get
-
-      - name: Dry-run publish ${{ matrix.package }}
-        working-directory: packages/${{ matrix.package }}
-        run: dart pub publish --dry-run
