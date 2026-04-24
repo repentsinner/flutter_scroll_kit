@@ -11,8 +11,8 @@ governed by each package's own `SPEC.md` under `packages/<name>/`.
 
 *Status: complete*
 
-The repo publishes four packages, each with its own `SPEC.md` that
-governs its internal design:
+Implements §req:problem-statement. The repo publishes four packages,
+each with its own `SPEC.md` that governs its internal design:
 
 | Package | Purpose | Depends on |
 |---------|---------|------------|
@@ -27,6 +27,10 @@ Dev dependencies are limited to `flutter_lints` and `flutter_test`.
 ## 2. Dependency Graph §spec:dependency-graph
 
 *Status: complete*
+
+Implements §req:problem-statement. The graph is shaped by the
+composability requirement: a consumer of one primitive does not pay
+for primitives they do not use.
 
 ```text
 line_snap_scroll_physics
@@ -44,6 +48,10 @@ order is load-bearing, not merely tidy.
 ## 3. Publication Model §spec:publication-model
 
 *Status: in progress*
+
+Implements §req:success-criteria. Independent installation, adoption,
+and upgrade all depend on per-package publication with per-package
+versioning.
 
 Each package publishes to pub.dev under an independent SemVer track.
 Initial release is `0.1.0` across all four, reflecting "API shapes
@@ -64,6 +72,11 @@ a failed dry-run on the first package.
 
 *Status: complete*
 
+Implements §req:problem-statement. Maintaining four interdependent
+packages in lockstep during development requires shared workspace
+tooling; contributors working across packages need a single
+resolve step.
+
 The repository is a Dart 3.6+ workspace. The root `pubspec.yaml`
 declares `packages/*` under `workspace:`, and each package declares
 `resolution: workspace` to participate in shared resolution. A
@@ -78,6 +91,10 @@ develop and test.
 ## 5. Origin and License §spec:origin-and-license
 
 *Status: complete*
+
+Implements §req:problem-statement. The extraction from rove is the
+mechanism by which the primitives become consumable by projects
+other than rove.
 
 The packages lived as in-tree modules inside
 [repentsinner/rove](https://github.com/repentsinner/rove) from
