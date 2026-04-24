@@ -2,36 +2,45 @@
 
 ## Publication to pub.dev
 
-Implements §spec:publication-model. The monorepo, per-package
-sources, workspace bootstrap, and SPECs are landed. The remaining
-work gets the four packages onto pub.dev so external consumers
-(starting with rove's `swap-to-pub-dev-deps` workstream) can depend
-on hosted versions instead of git sources.
+Implements §spec:publication-model and §spec:publication-automation.
+The monorepo, per-package sources, workspace bootstrap, and SPECs are
+landed. The remaining work gates commit hygiene, wires each package
+to publish on tag push, and performs the one-time trusted-publisher
+configuration on pub.dev so external consumers (starting with rove's
+`swap-to-pub-dev-deps` workstream) can depend on hosted versions
+instead of git sources.
 
 ### §road:conventional-commits-lint
 
-GitHub Actions workflow gating PRs to enforce Conventional Commits
-on PR titles. release-please already reads commit messages on merge
-to main; the title-based PR check prevents non-compliant titles from
-reaching squash-merge.
+GitHub Actions workflow gating PR titles against Conventional Commits
+(`.github/workflows/conventional-commits-lint.yml`); implements
+§spec:publication-model by protecting the release-please commit-parse
+input.
+
+### §road:publication-workflow
+
+Per-package GitHub Actions publish workflows
+(`.github/workflows/publish-<package>.yml`) triggered on
+`<package>-v*` tag pushes, authenticated via `dart-lang/setup-dart`
+OIDC and serialized by shared concurrency group for topological
+ordering across simultaneous release-please tag bursts; implements
+§spec:publication-automation.
 
 ### §road:first-publication
 
-Publish each package to pub.dev in topological order:
-`line_snap_scroll_physics` first, `sticky_hierarchical_scroll` and
-`fixed_line_view` in parallel, `repl_view` last. Version is whatever
-is current in `.release-please-manifest.json` at publish time (the
-first release-please bump landed before any external publication, so
-the first pub.dev version is `0.1.1`, not `0.1.0`). Verify each via
-`dart pub add <package>` in a scratch project between publishes.
-Closes §spec:publication-model.
+One-time pub.dev trusted-publisher configuration for all four packages
+followed by the initial publication trigger (human-only operations,
+no repo changes — requires pub.dev account access); closes
+§spec:publication-model and §spec:publication-automation.
 
-**Verify:** After §road:first-publication lands, each of the four
-packages appears on pub.dev at `https://pub.dev/packages/<name>`
-with its documented description, README, dependency graph, and
-per-package `CHANGELOG.md`. `dart pub add line_snap_scroll_physics`
-in a scratch Flutter project resolves successfully and `import
-'package:line_snap_scroll_physics/line_snap_scroll_physics.dart'`
-compiles. Rove's `swap-to-pub-dev-deps` workstream (tracked in
+**Verify:** Each of the four packages appears at
+`https://pub.dev/packages/<name>` with its documented description,
+README, dependency graph, and per-package `CHANGELOG.md`. In a
+scratch Flutter project, `dart pub add <package>` resolves for each
+without a git reference, and
+`import 'package:<package>/<package>.dart';` compiles — starting with
+`line_snap_scroll_physics`, then `sticky_hierarchical_scroll` and
+`fixed_line_view` in either order, then `repl_view`. Rove's
+`swap-to-pub-dev-deps` workstream (tracked in
 [rove's ROADMAP](https://github.com/repentsinner/rove/blob/main/ROADMAP.md))
-becomes unblocked.
+unblocks.
