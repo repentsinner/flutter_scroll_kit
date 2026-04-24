@@ -54,10 +54,10 @@ and upgrade all depend on per-package publication with per-package
 versioning.
 
 Each package publishes to pub.dev under an independent SemVer track.
-Initial release is `0.1.0` across all four, reflecting "API shapes
-are stable enough to use, but expect breakage until validated by
-real consumers." Version `1.0.0` signals API commitment once at
-least one external consumer has validated the shape.
+Pre-1.0 versions (`0.x.y`) signal "API shapes are stable enough to
+use, but expect breakage until validated by real consumers."
+Version `1.0.0` signals API commitment once at least one external
+consumer has validated the shape.
 
 Packages version independently: a bug fix in `repl_view` does not
 bump `line_snap_scroll_physics`. Each package carries its own

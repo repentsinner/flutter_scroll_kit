@@ -17,9 +17,12 @@ reaching squash-merge.
 
 ### §road:first-publication
 
-Publish `0.1.0` of each package to pub.dev in topological order:
+Publish each package to pub.dev in topological order:
 `line_snap_scroll_physics` first, `sticky_hierarchical_scroll` and
-`fixed_line_view` in parallel, `repl_view` last. Verify each via
+`fixed_line_view` in parallel, `repl_view` last. Version is whatever
+is current in `.release-please-manifest.json` at publish time (the
+first release-please bump landed before any external publication, so
+the first pub.dev version is `0.1.1`, not `0.1.0`). Verify each via
 `dart pub add <package>` in a scratch project between publishes.
 Closes §spec:publication-model.
 
