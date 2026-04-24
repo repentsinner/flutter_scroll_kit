@@ -10,13 +10,6 @@ configuration on pub.dev so external consumers (starting with rove's
 `swap-to-pub-dev-deps` workstream) can depend on hosted versions
 instead of git sources.
 
-### §road:conventional-commits-lint
-
-GitHub Actions workflow gating PR titles against Conventional Commits
-(`.github/workflows/conventional-commits-lint.yml`); implements
-§spec:publication-model by protecting the release-please commit-parse
-input.
-
 ### §road:publication-workflow
 
 Per-package GitHub Actions publish workflows

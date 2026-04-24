@@ -1,0 +1,44 @@
+name: Conventional Commits Lint
+
+# Gates PR titles against Conventional Commits. The repo squash-merges,
+# so the PR title becomes the commit message on main — which
+# release-please parses to decide version bumps. A malformed title
+# would silently skip a release or produce an incorrect one. See
+# §spec:publication-model.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  validate-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      # amannn/action-semantic-pull-request@v6.1.1
+      # Pinned to commit SHA for supply-chain safety; bump deliberately.
+      - uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Match conventional-commit types already used in this repo.
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+          # Scopes are free-form across this repo (e.g., docs(roadmap),
+          # spec(...), chore(docs)). Leave unrestricted.
+          requireScope: false
+          # Subject: allow any first character — conventional-commits
+          # doesn't mandate lowercase, and release-please doesn't care.
+          subjectPattern: ^.+$
