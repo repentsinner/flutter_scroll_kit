@@ -8,7 +8,7 @@ scroll primitives that accumulated inside rove's in-tree modules:
 line-snapping scroll physics, sticky hierarchical headers, fixed-
 height line virtualization, and REPL-style scrollback with sticky
 input headers. A consumer that wants any one of these primitives
-without the rest must either fork rove or depend on it as a git
+without the rest can only fork rove or depend on it as a git
 source, which pulls in unrelated application code and resists
 independent versioning.
 
