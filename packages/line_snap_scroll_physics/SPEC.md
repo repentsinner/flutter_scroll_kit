@@ -12,7 +12,7 @@ pixel update during drag, fling, and programmatic scroll, plus a
 *Status: complete*
 
 Terminal- and console-style views need pixel-aligned lines: every frame
-must render whole lines only, never fractional positions. Flutter's
+shall render whole lines only, never fractional positions. Flutter's
 built-in `FixedExtentScrollPhysics` implements the snap-to-item-boundary
 ballistics correctly, but is coupled to `FixedExtentScrollController`
 and therefore restricted to `ListWheelScrollView`. General-purpose
