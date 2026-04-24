@@ -14,8 +14,7 @@ GitHub Actions workflow running `dart analyze --fatal-infos`,
 `dart format --output=none --set-exit-if-changed .`, and
 `flutter test` on every push and PR. Matrix across the four
 packages for per-package isolation. Conventional Commits lint gate
-on PR (release tooling consumes commit messages). Depends on
-§road:pubspec-publish-prep.
+on PR (release tooling consumes commit messages).
 
 ### §road:release-tooling
 
