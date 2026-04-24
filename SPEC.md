@@ -35,7 +35,7 @@ line_snap_scroll_physics
 └── fixed_line_view
 ```
 
-Publication order must match topological order: the base physics
+Publication order shall match topological order: the base physics
 package first, the two direct consumers next (parallelizable), the
 transitive consumer last. Publishing an upstream package with a
 dependency on an unpublished package fails the pub.dev resolver, so
@@ -55,7 +55,7 @@ Packages version independently: a bug fix in `repl_view` does not
 bump `line_snap_scroll_physics`. Each package carries its own
 `CHANGELOG.md` tracking only its own history.
 
-`dart pub publish --dry-run` is the gate — each package must be
+`dart pub publish --dry-run` is the gate — each package shall be
 independently publishable before any is published. Rationale: a
 partially-published dependency graph is harder to recover from than
 a failed dry-run on the first package.
