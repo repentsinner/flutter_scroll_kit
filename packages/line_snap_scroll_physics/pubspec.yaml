@@ -2,7 +2,7 @@ name: line_snap_scroll_physics
 description: >-
   Snap-to-line-boundary scroll physics for any ScrollView. Generalizes
   FixedExtentScrollPhysics beyond ListWheelScrollView.
-version: 0.1.0
+version: 0.1.1
 homepage: https://github.com/repentsinner/flutter_scroll_kit
 repository: https://github.com/repentsinner/flutter_scroll_kit/tree/main/packages/line_snap_scroll_physics
 issue_tracker: https://github.com/repentsinner/flutter_scroll_kit/issues

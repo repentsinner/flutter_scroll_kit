@@ -2,7 +2,7 @@ name: sticky_hierarchical_scroll
 description: >-
   VSCode-inspired sticky hierarchical scroll view for Flutter. Displays
   hierarchical data with fixed-height rows and sticky section headers.
-version: 0.1.0
+version: 0.1.1
 homepage: https://github.com/repentsinner/flutter_scroll_kit
 repository: https://github.com/repentsinner/flutter_scroll_kit/tree/main/packages/sticky_hierarchical_scroll
 issue_tracker: https://github.com/repentsinner/flutter_scroll_kit/issues

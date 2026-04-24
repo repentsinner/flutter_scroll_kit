@@ -3,7 +3,7 @@ description: >-
   Generic REPL-style scroll view for Flutter. Input lines pin as sticky
   section headers; response lines scroll as leaves within each section.
   Repeated identical responses coalesce with a count badge.
-version: 0.1.0
+version: 0.1.1
 homepage: https://github.com/repentsinner/flutter_scroll_kit
 repository: https://github.com/repentsinner/flutter_scroll_kit/tree/main/packages/repl_view
 issue_tracker: https://github.com/repentsinner/flutter_scroll_kit/issues

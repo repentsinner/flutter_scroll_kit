@@ -2,7 +2,7 @@ name: fixed_line_view
 description: >-
   Virtualized fixed-height line view widgets for Flutter. Supports active
   line tracking, auto-scroll behaviors, and stream-driven content.
-version: 0.1.0
+version: 0.1.1
 homepage: https://github.com/repentsinner/flutter_scroll_kit
 repository: https://github.com/repentsinner/flutter_scroll_kit/tree/main/packages/fixed_line_view
 issue_tracker: https://github.com/repentsinner/flutter_scroll_kit/issues
