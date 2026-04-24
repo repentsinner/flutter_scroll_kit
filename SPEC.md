@@ -103,3 +103,43 @@ to this repo. Pre-extraction history remains in rove; this repo
 carries per-file history from the extraction onward.
 
 BSD 3-Clause, matching upstream rove.
+
+## 6. Publication Automation §spec:publication-automation
+
+*Status: not started*
+
+Implements §req:success-criteria. The publication mechanism avoids
+ambient credentials — long-lived tokens stored in repository secrets
+would be readable by every workflow in the repo and would broaden
+the blast radius of any compromise.
+
+Publishing is triggered by git tag push events. pub.dev accepts
+automated publication only from tag-triggered workflows, and the
+`<component>-v<version>` tag format release-please already produces
+matches pub.dev's per-package trusted publisher pattern. Merging a
+release-please PR creates the tags; the tags trigger the publishes.
+
+Authentication uses OIDC against pub.dev's trusted publisher
+mechanism — the workflow exchanges a GitHub-signed OIDC token for a
+short-lived pub.dev credential, scoped to one publish. No
+long-lived credentials live in the repo or GitHub secrets. Reference:
+[dart.dev/tools/pub/automated-publishing](https://dart.dev/tools/pub/automated-publishing).
+
+Topological publication order is preserved across simultaneous
+releases. When release-please bumps multiple packages in one PR —
+most notably on initial publication — all tags land in a single push
+and all workflows trigger together. A dependent that publishes before
+its dependency is indexed on pub.dev fails resolver lookup. The
+workflow enforces ordering (base physics package before its two
+direct consumers, those before the transitive consumer) without
+prescribing a specific mechanism. Subsequent releases rarely exercise
+this path; release-please only tags packages with version-bumping
+commits, so most releases touch one package in isolation.
+
+One-time human setup is required and cannot be automated. Each of
+the four packages shall be registered as a trusted publisher on its
+pub.dev Admin page with a matching tag pattern. The pub.dev package
+owner grants this trust; a GitHub App cannot. Until registration
+completes for a given package, its workflow cannot publish that
+package — the first publication of each package necessarily follows
+the trusted publisher registration for that package.
