@@ -4,18 +4,10 @@
 
 Implements §spec:publication-model and §spec:publication-automation.
 The monorepo, per-package sources, workspace bootstrap, and SPECs are
-landed. The remaining work gates commit hygiene, wires each package
-to publish on tag push, and performs the one-time trusted-publisher
-configuration on pub.dev so external consumers (starting with rove's
-`swap-to-pub-dev-deps` workstream) can depend on hosted versions
-instead of git sources.
-
-### §road:conventional-commits-lint
-
-GitHub Actions workflow gating PR titles against Conventional Commits
-(`.github/workflows/conventional-commits-lint.yml`); implements
-§spec:publication-model by protecting the release-please commit-parse
-input.
+landed. The remaining work wires each package to publish on tag push
+and performs the one-time trusted-publisher configuration on pub.dev
+so external consumers (starting with rove's `swap-to-pub-dev-deps`
+workstream) can depend on hosted versions instead of git sources.
 
 ### §road:publication-workflow
 
