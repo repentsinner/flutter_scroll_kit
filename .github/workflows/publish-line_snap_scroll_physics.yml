@@ -1,0 +1,43 @@
+# Publish line_snap_scroll_physics to pub.dev.
+#
+# Triggered by release-please tag pushes matching the per-package
+# trusted-publisher pattern configured on pub.dev. Authentication uses
+# OIDC — the reusable workflow exchanges a GitHub-signed token for a
+# short-lived pub.dev credential. No long-lived secrets in the repo.
+# See SPEC §6 §spec:publication-automation.
+#
+# Topological ordering: the four publish-*.yml workflows share the
+# concurrency group `pub-publish` with `cancel-in-progress: false`.
+# When release-please pushes multiple tags in one burst (notably on
+# initial publication), this serializes the workflow runs. Within a
+# single push, GitHub queues runs in tag-push order, which release-
+# please emits deterministically — so dependencies publish before
+# dependents without an explicit DAG. Subsequent releases rarely
+# touch more than one package, so this rarely matters.
+#
+# Per dart.dev/tools/pub/automated-publishing, this calls the
+# canonical reusable workflow from dart-lang/setup-dart, which
+# bundles checkout + Dart/Flutter setup + dry-run + publish.
+name: Publish line_snap_scroll_physics
+
+on:
+  push:
+    tags:
+      - 'line_snap_scroll_physics-v[0-9]+.[0-9]+.[0-9]+'
+
+# Shared with the other publish-*.yml workflows for cross-workflow
+# serialization across tag bursts. Do not rename without updating
+# the others in lockstep.
+concurrency:
+  group: pub-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    permissions:
+      id-token: write # required for OIDC trusted-publisher exchange
+    # Pinned to v1.7.2 (released 2025-09-04). Update this SHA when
+    # bumping the dart-lang/setup-dart version.
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@65eb853c7ba17dde3be364c3d2858773e7144260
+    with:
+      working-directory: packages/line_snap_scroll_physics
