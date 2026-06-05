@@ -77,16 +77,22 @@ packages in lockstep during development requires shared workspace
 tooling; contributors working across packages need a single
 resolve step.
 
-The repository is a Dart 3.6+ workspace. The root `pubspec.yaml`
-declares `packages/*` under `workspace:`, and each package declares
-`resolution: workspace` to participate in shared resolution. A
-single `dart pub get` at the root bootstraps all four packages.
+The repository is a Dart workspace (native `resolution: workspace`).
+The root `pubspec.yaml` lists each package and example under
+`workspace:`, and each declares `resolution: workspace`. A single
+`dart pub get` at the root resolves the whole tree against one shared
+lockfile, so a sibling dependency expressed as a hosted version
+constraint (§3) resolves to the local package during development yet
+stays publishable. Examples join the workspace for the same reason:
+each depends on its parent package by path, so the parent's hosted
+sibling constraints resolve locally — not against pub.dev — before
+those siblings are published.
 
-Melos scripts (`melos.yaml`) run analyze, test, and format-check
-across all packages in one command. Melos is a convenience layer —
-every script has a direct `dart` equivalent that works from any
-package directory. Contributors without Melos installed can still
-develop and test.
+Cross-package checks run as plain SDK commands from the root —
+`dart analyze`, `dart format`, and a per-package `flutter test` — the
+same commands CI runs. No workspace-management wrapper (Melos or
+otherwise) is needed; native workspace support covers bootstrap and
+resolution.
 
 ## 5. Origin and License §spec:origin-and-license
 

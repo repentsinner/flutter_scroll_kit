@@ -28,23 +28,16 @@ All four are pure Flutter — no third-party dependencies.
 
 ## Development
 
-This repo is a Dart workspace (`resolution: workspace`). From the
-root:
+This repo is a Dart workspace (`resolution: workspace`); one
+`dart pub get` at the root bootstraps every package and example.
 
 ```sh
-dart pub get         # bootstrap all packages at once
-dart analyze         # analyze all packages
+dart pub get     # bootstrap the whole workspace
+dart analyze     # analyze all packages
+dart format .    # check formatting
 ```
 
-Or with Melos:
-
-```sh
-dart pub global activate melos
-melos bootstrap
-melos run analyze
-melos run test
-melos run format-check
-```
+Run tests per package: `cd packages/<name> && flutter test`.
 
 ## History
 

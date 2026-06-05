@@ -2,6 +2,8 @@ name: line_snap_scroll_physics_example
 description: Demo app for line_snap_scroll_physics.
 publish_to: none
 
+resolution: workspace
+
 environment:
   sdk: ^3.10.0
 

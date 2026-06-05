@@ -22,8 +22,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  sticky_hierarchical_scroll:
-    path: ../sticky_hierarchical_scroll
+  sticky_hierarchical_scroll: ^0.1.1
 
 dev_dependencies:
   flutter_test:
