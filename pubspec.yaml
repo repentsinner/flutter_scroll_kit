@@ -9,3 +9,7 @@ workspace:
   - packages/sticky_hierarchical_scroll
   - packages/fixed_line_view
   - packages/repl_view
+  - packages/line_snap_scroll_physics/example
+  - packages/sticky_hierarchical_scroll/example
+  - packages/fixed_line_view/example
+  - packages/repl_view/example
