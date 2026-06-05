@@ -1,0 +1,22 @@
+# Publish fixed_line_view to pub.dev.
+# See publish-line_snap_scroll_physics.yml for design rationale —
+# this file mirrors that one, parameterized for this package.
+name: Publish fixed_line_view
+
+on:
+  push:
+    tags:
+      - 'fixed_line_view-v[0-9]+.[0-9]+.[0-9]+'
+
+concurrency:
+  group: pub-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    permissions:
+      id-token: write
+    # dart-lang/setup-dart v1.7.2
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@65eb853c7ba17dde3be364c3d2858773e7144260
+    with:
+      working-directory: packages/fixed_line_view

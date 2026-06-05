@@ -3,20 +3,11 @@
 ## Publication to pub.dev
 
 Implements §spec:publication-model and §spec:publication-automation.
-The monorepo, per-package sources, workspace bootstrap, and SPECs are
-landed. The remaining work wires each package to publish on tag push
-and performs the one-time trusted-publisher configuration on pub.dev
+The monorepo, per-package sources, workspace bootstrap, SPECs, and
+per-package publish workflows are landed. The remaining work
+performs the one-time trusted-publisher configuration on pub.dev
 so external consumers (starting with rove's `swap-to-pub-dev-deps`
 workstream) can depend on hosted versions instead of git sources.
-
-### §road:publication-workflow
-
-Per-package GitHub Actions publish workflows
-(`.github/workflows/publish-<package>.yml`) triggered on
-`<package>-v*` tag pushes, authenticated via `dart-lang/setup-dart`
-OIDC and serialized by shared concurrency group for topological
-ordering across simultaneous release-please tag bursts; implements
-§spec:publication-automation.
 
 ### §road:first-publication
 
