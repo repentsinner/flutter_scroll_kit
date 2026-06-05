@@ -1,0 +1,25 @@
+name: Publish line_snap_scroll_physics
+
+# Publishes packages/line_snap_scroll_physics to pub.dev when
+# release-please pushes a line_snap_scroll_physics-vX.Y.Z tag.
+# Authentication is OIDC via pub.dev trusted publishing — no secrets.
+# Requires one-time trusted-publisher registration on the package's
+# pub.dev Admin page (repo + tag pattern line_snap_scroll_physics-v{{version}}).
+on:
+  push:
+    tags:
+      - 'line_snap_scroll_physics-v[0-9]+.[0-9]+.[0-9]+'
+
+# Serialize all four publish workflows so simultaneous tag bursts do
+# not race; cancel-in-progress: false lets every queued publish run.
+concurrency:
+  group: publish-pub-dev
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    permissions:
+      id-token: write # mint the short-lived OIDC token pub.dev verifies
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
+    with:
+      working-directory: packages/line_snap_scroll_physics

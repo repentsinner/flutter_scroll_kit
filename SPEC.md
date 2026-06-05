@@ -106,7 +106,7 @@ BSD 3-Clause, matching upstream rove.
 
 ## 6. Publication Automation §spec:publication-automation
 
-*Status: not started*
+*Status: in progress*
 
 Implements §req:success-criteria. The publication mechanism avoids
 ambient credentials — long-lived tokens stored in repository secrets
