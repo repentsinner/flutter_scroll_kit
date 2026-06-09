@@ -2,13 +2,16 @@
 
 Generic REPL-style scroll view for Flutter.
 
+Part of [flutter_scroll_kit](https://github.com/repentsinner/flutter_scroll_kit)
+— composable Flutter scroll primitives.
+
 Input lines pin as sticky section headers; response lines scroll as
 leaves within each section. Repeated identical responses coalesce
 with a count badge (e.g. "ok x47" instead of 47 identical lines) when
 the consumer's data source supplies a pre-coalesced entry with
 `count > 1`.
 
-Built on [`sticky_hierarchical_scroll`](../sticky_hierarchical_scroll/).
+Built on [`sticky_hierarchical_scroll`](https://pub.dev/packages/sticky_hierarchical_scroll).
 
 ## Usage
 
