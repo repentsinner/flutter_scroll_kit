@@ -2,6 +2,9 @@
 
 Virtualized fixed-height line view widgets for Flutter.
 
+Part of [flutter_scroll_kit](https://github.com/repentsinner/flutter_scroll_kit)
+— composable Flutter scroll primitives.
+
 Two widgets for log-, terminal-, and listing-shaped UIs where rows
 share a uniform height:
 
@@ -10,7 +13,7 @@ share a uniform height:
 - `StreamLineView<T>` — a stream-driven variant that appends items
   as they arrive and optionally trims to a ring-buffer cap.
 
-Depends on [`line_snap_scroll_physics`](../line_snap_scroll_physics/)
+Depends on [`line_snap_scroll_physics`](https://pub.dev/packages/line_snap_scroll_physics)
 for optional line-snap behavior.
 
 ## FixedLineView
