@@ -2,6 +2,9 @@
 
 Line-aligned scroll primitives for any Flutter `ScrollView`.
 
+Part of [flutter_scroll_kit](https://github.com/repentsinner/flutter_scroll_kit)
+— composable Flutter scroll primitives.
+
 Flutter's `FixedExtentScrollPhysics` implements snap-to-item-boundary
 ballistics correctly but is coupled to `FixedExtentScrollController`
 and therefore restricted to `ListWheelScrollView`. This package

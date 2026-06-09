@@ -2,6 +2,9 @@
 
 VS Code-style sticky headers for hierarchical Flutter lists.
 
+Part of [flutter_scroll_kit](https://github.com/repentsinner/flutter_scroll_kit)
+— composable Flutter scroll primitives.
+
 Section headers stick to the top of the viewport as the user scrolls,
 maintaining a breadcrumb trail of the current position in the hierarchy.
 When a section ends, its header pushes out smoothly — matching VS Code's
