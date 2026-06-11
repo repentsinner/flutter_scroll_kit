@@ -21,6 +21,9 @@ final class LineSnapScrollController extends ScrollController {
     super.debugLabel,
   }) : assert(itemExtent > 0, 'itemExtent must be positive');
 
+  /// Creates a [ScrollPosition] that quantizes every pixel offset to an
+  /// [itemExtent] boundary. Flutter's scroll system calls this; callers
+  /// do not invoke it directly.
   @override
   ScrollPosition createScrollPosition(
     ScrollPhysics physics,
