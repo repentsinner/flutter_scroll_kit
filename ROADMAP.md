@@ -22,8 +22,8 @@ README, dependency graph, and per-package `CHANGELOG.md`. In a
 scratch Flutter project, `dart pub add <package>` resolves for each
 without a git reference, and
 `import 'package:<package>/<package>.dart';` compiles — starting with
-`line_snap_scroll_physics`, then `sticky_hierarchical_scroll` and
-`fixed_line_view` in either order, then `repl_view`. Rove's
+`line_snap_scroll_physics` and `sticky_hierarchical_scroll` in either
+order, then `fixed_line_view` and `repl_view` in either order. Rove's
 `swap-to-pub-dev-deps` workstream (tracked in
 [rove's ROADMAP](https://github.com/repentsinner/rove/blob/main/ROADMAP.md))
 unblocks.

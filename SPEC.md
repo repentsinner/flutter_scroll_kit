@@ -17,7 +17,7 @@ each with its own `SPEC.md` that governs its internal design:
 | Package | Purpose | Depends on |
 |---------|---------|------------|
 | `line_snap_scroll_physics` | `ScrollController` and `ScrollPhysics` that quantize offsets to fixed line boundaries | — |
-| `sticky_hierarchical_scroll` | VS Code–style hierarchical sticky header overlay for flat lists | `line_snap_scroll_physics` |
+| `sticky_hierarchical_scroll` | VS Code–style hierarchical sticky header overlay for flat lists | — |
 | `fixed_line_view` | Virtualized fixed-height line view with active-line tracking and auto-scroll | `line_snap_scroll_physics` |
 | `repl_view` | Two-level REPL scrollback with sticky input headers, coalesced responses, and identity-anchored viewport | `sticky_hierarchical_scroll` |
 
@@ -34,14 +34,17 @@ for primitives they do not use.
 
 ```text
 line_snap_scroll_physics
-├── sticky_hierarchical_scroll
-│   └── repl_view
 └── fixed_line_view
+
+sticky_hierarchical_scroll
+└── repl_view
 ```
 
-Publication order shall match topological order: the base physics
-package first, the two direct consumers next (parallelizable), the
-transitive consumer last. Publishing an upstream package with a
+Publication order shall match topological order: the two
+dependency-free base packages (`line_snap_scroll_physics` and
+`sticky_hierarchical_scroll`) first and in parallel, their direct
+consumers (`fixed_line_view` and `repl_view`) next. Publishing an
+upstream package with a
 dependency on an unpublished package fails the pub.dev resolver, so
 order is load-bearing, not merely tidy.
 
@@ -136,8 +139,8 @@ releases. When release-please bumps multiple packages in one PR —
 most notably on initial publication — all tags land in a single push
 and all workflows trigger together. A dependent that publishes before
 its dependency is indexed on pub.dev fails resolver lookup. The
-workflow enforces ordering (base physics package before its two
-direct consumers, those before the transitive consumer) without
+workflow enforces ordering (the two dependency-free base packages
+before their direct consumers) without
 prescribing a specific mechanism. Subsequent releases rarely exercise
 this path; release-please only tags packages with version-bumping
 commits, so most releases touch one package in isolation.
