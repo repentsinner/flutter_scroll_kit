@@ -50,7 +50,7 @@ order is load-bearing, not merely tidy.
 
 ## 3. Publication Model §spec:publication-model
 
-*Status: in progress*
+*Status: complete*
 
 Implements §req:success-criteria. Independent installation, adoption,
 and upgrade all depend on per-package publication with per-package
@@ -115,7 +115,7 @@ BSD 3-Clause, matching upstream rove.
 
 ## 6. Publication Automation §spec:publication-automation
 
-*Status: in progress*
+*Status: complete*
 
 Implements §req:success-criteria. The publication mechanism avoids
 ambient credentials — long-lived tokens stored in repository secrets
@@ -145,10 +145,7 @@ prescribing a specific mechanism. Subsequent releases rarely exercise
 this path; release-please only tags packages with version-bumping
 commits, so most releases touch one package in isolation.
 
-One-time human setup is required and cannot be automated. Each of
-the four packages shall be registered as a trusted publisher on its
+One-time human setup that cannot be automated precedes the first
+publication: each package is registered as a trusted publisher on its
 pub.dev Admin page with a matching tag pattern. The pub.dev package
-owner grants this trust; a GitHub App cannot. Until registration
-completes for a given package, its workflow cannot publish that
-package — the first publication of each package necessarily follows
-the trusted publisher registration for that package.
+owner grants this trust; a GitHub App cannot.
