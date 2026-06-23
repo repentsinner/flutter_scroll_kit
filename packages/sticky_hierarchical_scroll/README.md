@@ -44,7 +44,7 @@ StickyHierarchicalScrollView<MyItem>(
 | Parameter | Description |
 |---|---|
 | `items` | Flat list of all items (sections and leaves) |
-| `getLevel` | Returns the hierarchical depth (0-based) of an item |
+| `getLevel` | Returns the hierarchical depth of an item. 0-based: root is level 0, children level 1, etc. Negative levels are not supported |
 | `isSection` | Returns `true` for items that should stick |
 | `itemExtent` | Fixed pixel height of every row |
 | `config` | Sticky behavior configuration (see below) |
@@ -66,7 +66,7 @@ StickyHierarchicalScrollView<MyItem>(
 The `stickyHeaderBuilder` receives a `StickyCandidate<T>` with:
 
 - `data` — the original item of type `T`
-- `level` — hierarchical depth
+- `level` — hierarchical depth (0-based; root is level 0)
 - `originalIndex` — position in the flat item list
 
 ## Example

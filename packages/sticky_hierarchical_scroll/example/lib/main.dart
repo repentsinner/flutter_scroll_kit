@@ -39,6 +39,8 @@ class DemoPage extends StatelessWidget {
     return Scaffold(
       body: StickyHierarchicalScrollView<DemoItem>(
         items: items,
+        // Levels are 0-based: top-level projects are level 0, their
+        // children level 1, and so on down the tree.
         getLevel: (item) => item.level,
         isSection: (item) => item.isSection,
         itemExtent: _itemExtent,
