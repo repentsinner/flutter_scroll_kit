@@ -82,6 +82,13 @@ class _FixedLineViewState extends State<FixedLineView> {
   /// Suppresses auto-scroll until the user scrolls back to bottom.
   bool _userScrolledAway = false;
 
+  /// True when the in-flight scroll sequence began with a user drag.
+  /// A drag-then-fling is one continuous start→end sequence, so the
+  /// contact phase marks it user-driven and the flag survives into the
+  /// ballistic phase. Programmatic auto-scrolls leave it false, so their
+  /// landing position never counts as the user scrolling away.
+  bool _userDragInSequence = false;
+
   ScrollController get _scrollController =>
       widget.controller ??
       (_internalController ??= widget.lineSnap
@@ -136,13 +143,24 @@ class _FixedLineViewState extends State<FixedLineView> {
     if (widget.autoScroll != AutoScrollBehavior.bottom) return false;
 
     switch (notification) {
-      // User is actively dragging — mark as scrolled away if not at bottom.
-      case ScrollUpdateNotification(dragDetails: final DragUpdateDetails _)
-          when !_isAtBottom():
-        _userScrolledAway = true;
-      // Scroll settled — re-enable auto-scroll if back at bottom.
-      case ScrollEndNotification() when _isAtBottom():
-        _userScrolledAway = false;
+      // New scroll sequence — assume programmatic until a drag proves
+      // otherwise.
+      case ScrollStartNotification():
+        _userDragInSequence = false;
+      // User is actively dragging — mark the sequence user-driven and
+      // suppress immediately if already away from the bottom, so entries
+      // arriving mid-drag don't yank the viewport down.
+      case ScrollUpdateNotification(dragDetails: final DragUpdateDetails _):
+        _userDragInSequence = true;
+        if (!_isAtBottom()) _userScrolledAway = true;
+      // Sequence settled. For user-driven scrolls (including a fling whose
+      // ballistic phase carries no drag details), recompute intent from
+      // the resting position: a fling away from the bottom suppresses
+      // auto-scroll; a return to the bottom re-enables it. Programmatic
+      // auto-scrolls that land short of a freshly-grown extent are left
+      // untouched.
+      case ScrollEndNotification() when _userDragInSequence:
+        _userScrolledAway = !_isAtBottom();
       default:
         break;
     }
