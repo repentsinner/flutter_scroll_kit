@@ -189,6 +189,14 @@ class _ReplViewState<T extends ConsoleEntry> extends State<ReplView<T>> {
     for (var i = 0; i < widget.entries.length; i++) {
       if (widget.entries[i].identity == _anchor!.identity) {
         final target = i * widget.itemExtent + _anchor!.offsetWithinEntry;
+        if (target >= pos.maxScrollExtent) {
+          // The anchor has reached the tail (e.g. a trim shrank the list
+          // beneath it). Sitting at the bottom is a return to stuck —
+          // clear the anchor so later appends keep following the tail
+          // instead of snapping back to this now sub-bottom position.
+          _anchor = null;
+          return pos.maxScrollExtent;
+        }
         return target.clamp(0.0, pos.maxScrollExtent);
       }
     }

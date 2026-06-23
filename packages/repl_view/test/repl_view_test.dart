@@ -320,6 +320,57 @@ void main() {
       );
     });
 
+    testWidgets(
+      'anchor clamped to the bottom by a tail trim re-enters stuck state',
+      (tester) async {
+        final controller = ScrollController();
+        // 81 entries (1 input + 80 responses) x 16px in a 400px viewport.
+        final entries = _buildEntries(responseCount: 80);
+
+        await tester.pumpWidget(
+          _harness(entries: List.of(entries), controller: controller),
+        );
+        await tester.pumpAndSettle();
+
+        // Float deterministically partway up. jumpTo emits a settled
+        // notification away from the bottom, anchoring on entry ~37.
+        controller.jumpTo(600);
+        await tester.pumpAndSettle();
+        expect(
+          controller.position.pixels,
+          lessThan(controller.position.maxScrollExtent - 16.0),
+        );
+
+        // Trim the tail so the anchor entry survives but its target lands
+        // past the new (smaller) maxScrollExtent — the view sits at the
+        // bottom while still nominally floating.
+        entries.removeRange(42, entries.length);
+        await tester.pumpWidget(
+          _harness(entries: List.of(entries), controller: controller),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          controller.position.pixels,
+          closeTo(controller.position.maxScrollExtent, 0.5),
+        );
+
+        // Appending must follow the tail: reaching the bottom is a return
+        // to stuck, not a stale sub-bottom anchor that stops auto-follow.
+        for (var i = 0; i < 40; i++) {
+          entries.add(_Entry.response('grow-$i', id: 2000 + i));
+        }
+        await tester.pumpWidget(
+          _harness(entries: List.of(entries), controller: controller),
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          controller.position.pixels,
+          closeTo(controller.position.maxScrollExtent, 0.5),
+        );
+      },
+    );
+
     testWidgets('returning to bottom re-enters stuck state', (tester) async {
       final controller = ScrollController();
       final entries = _buildEntries(responseCount: 60);
