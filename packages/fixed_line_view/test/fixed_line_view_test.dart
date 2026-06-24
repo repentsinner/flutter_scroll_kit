@@ -1,6 +1,25 @@
 import 'package:fixed_line_view/fixed_line_view.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+/// Item extent for the bottom auto-scroll suppression tests. 50px in the
+/// 600px test viewport: a fling/drag of < 50px contact travel stays within
+/// one item of the bottom, exercising the post-settle suppression path.
+const _itemExtent = 50.0;
+
+/// A bottom-following [FixedLineView] over [lineCount] lines on [controller].
+Widget _bottomView(ScrollController controller, int lineCount) =>
+    Directionality(
+      textDirection: TextDirection.ltr,
+      child: FixedLineView(
+        lineCount: lineCount,
+        itemExtent: _itemExtent,
+        autoScroll: AutoScrollBehavior.bottom,
+        controller: controller,
+        lineBuilder: (context, index) => Text('Line $index'),
+      ),
+    );
 
 void main() {
   group('FixedLineView', () {
@@ -168,21 +187,10 @@ void main() {
       final controller = ScrollController();
       addTearDown(controller.dispose);
 
-      // itemExtent 50 in a 600px viewport: a fling with < 50px of
-      // contact travel never crosses the at-bottom threshold during
-      // the drag, so suppression must come from the post-fling settle.
-      await tester.pumpWidget(
-        Directionality(
-          textDirection: TextDirection.ltr,
-          child: FixedLineView(
-            lineCount: 100,
-            itemExtent: 50.0,
-            autoScroll: AutoScrollBehavior.bottom,
-            controller: controller,
-            lineBuilder: (context, index) => Text('Line $index'),
-          ),
-        ),
-      );
+      // A fling with < itemExtent of contact travel never crosses the
+      // at-bottom threshold during the drag, so suppression must come from
+      // the post-fling settle.
+      await tester.pumpWidget(_bottomView(controller, 100));
       await tester.pumpAndSettle();
       expect(controller.offset, controller.position.maxScrollExtent);
 
@@ -204,26 +212,113 @@ void main() {
       // Momentum left us well above the bottom.
       expect(
         controller.offset,
-        lessThan(controller.position.maxScrollExtent - 50.0),
+        lessThan(controller.position.maxScrollExtent - _itemExtent),
       );
       final flungTo = controller.offset;
 
       // Appending a line must NOT yank the viewport back to the bottom.
-      await tester.pumpWidget(
-        Directionality(
-          textDirection: TextDirection.ltr,
-          child: FixedLineView(
-            lineCount: 101,
-            itemExtent: 50.0,
-            autoScroll: AutoScrollBehavior.bottom,
-            controller: controller,
-            lineBuilder: (context, index) => Text('Line $index'),
-          ),
-        ),
-      );
+      await tester.pumpWidget(_bottomView(controller, 101));
       await tester.pumpAndSettle();
 
       expect(controller.offset, closeTo(flungTo, 0.5));
+    });
+
+    testWidgets('suspends auto-scroll after a mouse-wheel scroll up', (
+      tester,
+    ) async {
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(_bottomView(controller, 100));
+      await tester.pumpAndSettle();
+      expect(controller.offset, controller.position.maxScrollExtent);
+
+      // Mouse-wheel scroll up emits a UserScrollNotification but carries no
+      // drag details — the desktop case the old detection missed.
+      final pointer = TestPointer(1, PointerDeviceKind.mouse);
+      final location = tester.getCenter(find.byType(FixedLineView));
+      await tester.sendEventToBinding(pointer.hover(location));
+      await tester.sendEventToBinding(pointer.scroll(const Offset(0, -300)));
+      await tester.pumpAndSettle();
+
+      expect(
+        controller.offset,
+        lessThan(controller.position.maxScrollExtent - _itemExtent),
+      );
+      final scrolledTo = controller.offset;
+
+      // Appending a line must NOT yank the viewport back to the bottom.
+      await tester.pumpWidget(_bottomView(controller, 101));
+      await tester.pumpAndSettle();
+
+      expect(controller.offset, closeTo(scrolledTo, 0.5));
+    });
+
+    testWidgets('suspends auto-scroll when a drag rests within one item', (
+      tester,
+    ) async {
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(_bottomView(controller, 100));
+      await tester.pumpAndSettle();
+
+      // Slow drag up 30px (> tolerance, < itemExtent) at near-zero velocity
+      // so it rests in-band. The trailing line is now hidden, so this is
+      // "scrolled away" even though it is within one item of the bottom —
+      // the case the old full-itemExtent slack wrongly treated as at-bottom.
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.byType(FixedLineView)),
+      );
+      for (var ms = 100; ms <= 600; ms += 100) {
+        await gesture.moveBy(
+          const Offset(0, 5),
+          timeStamp: Duration(milliseconds: ms),
+        );
+      }
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      final restedAt = controller.offset;
+      final max = controller.position.maxScrollExtent;
+      expect(restedAt, lessThan(max));
+      expect(restedAt, greaterThan(max - _itemExtent));
+
+      // Appending a line must NOT yank the hidden line into view.
+      await tester.pumpWidget(_bottomView(controller, 101));
+      await tester.pumpAndSettle();
+
+      expect(controller.offset, closeTo(restedAt, 0.5));
+    });
+
+    testWidgets('resumes auto-scroll when returned to the bottom', (
+      tester,
+    ) async {
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(_bottomView(controller, 100));
+      await tester.pumpAndSettle();
+
+      // User drags away from the bottom — auto-scroll suspended.
+      await tester.drag(find.byType(FixedLineView), const Offset(0, 200));
+      await tester.pumpAndSettle();
+      expect(
+        controller.offset,
+        lessThan(controller.position.maxScrollExtent - _itemExtent),
+      );
+
+      // External code jumps back to the bottom (e.g. a "jump to bottom"
+      // button). Resting at the bottom must resume follow regardless of who
+      // scrolled there — the old code only resumed on a user drag.
+      controller.jumpTo(controller.position.maxScrollExtent);
+      await tester.pumpAndSettle();
+
+      // A newly appended line auto-scrolls to the new bottom again.
+      await tester.pumpWidget(_bottomView(controller, 101));
+      await tester.pumpAndSettle();
+
+      expect(controller.offset, controller.position.maxScrollExtent);
     });
 
     testWidgets('uses external ScrollController when provided', (tester) async {

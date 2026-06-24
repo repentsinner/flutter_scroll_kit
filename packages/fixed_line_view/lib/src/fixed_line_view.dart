@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:flutter/scheduler.dart';
 import 'package:line_snap_scroll_physics/line_snap_scroll_physics.dart';
 
@@ -82,12 +83,14 @@ class _FixedLineViewState extends State<FixedLineView> {
   /// Suppresses auto-scroll until the user scrolls back to bottom.
   bool _userScrolledAway = false;
 
-  /// True when the in-flight scroll sequence began with a user drag.
-  /// A drag-then-fling is one continuous start→end sequence, so the
-  /// contact phase marks it user-driven and the flag survives into the
-  /// ballistic phase. Programmatic auto-scrolls leave it false, so their
-  /// landing position never counts as the user scrolling away.
-  bool _userDragInSequence = false;
+  /// True while the in-flight scroll sequence is user-driven.
+  /// Flutter emits [UserScrollNotification] for drags, flings, mouse-wheel,
+  /// and trackpad scrolls — but not for programmatic [ScrollController]
+  /// moves. Latching it on that signal (rather than on the presence of
+  /// drag details) means a fling's ballistic phase and pointer-scroll
+  /// deltas both count as user-driven, while our own auto-scroll never
+  /// counts as the user scrolling away.
+  bool _userScrolling = false;
 
   ScrollController get _scrollController =>
       widget.controller ??
@@ -131,11 +134,17 @@ class _FixedLineViewState extends State<FixedLineView> {
     }
   }
 
-  /// Whether the scroll position is at (or within one item of) the bottom.
+  /// Sub-pixel distance from the bottom still counted as "at bottom".
+  /// The bottom is always exactly [ScrollPosition.maxScrollExtent] (lineSnap
+  /// aligns the last line to it, pixel mode lands on it), so this only
+  /// absorbs ballistic/spring settling error — never a full hidden line.
+  static const double _atBottomTolerance = 1.0;
+
+  /// Whether the scroll position is at the bottom.
   bool _isAtBottom() {
     if (!_scrollController.hasClients) return true;
     final position = _scrollController.position;
-    return position.pixels >= position.maxScrollExtent - widget.itemExtent;
+    return position.pixels >= position.maxScrollExtent - _atBottomTolerance;
   }
 
   /// Tracks user scroll intent for bottom auto-scroll suppression.
@@ -143,24 +152,30 @@ class _FixedLineViewState extends State<FixedLineView> {
     if (widget.autoScroll != AutoScrollBehavior.bottom) return false;
 
     switch (notification) {
-      // New scroll sequence — assume programmatic until a drag proves
-      // otherwise.
-      case ScrollStartNotification():
-        _userDragInSequence = false;
-      // User is actively dragging — mark the sequence user-driven and
-      // suppress immediately if already away from the bottom, so entries
-      // arriving mid-drag don't yank the viewport down.
-      case ScrollUpdateNotification(dragDetails: final DragUpdateDetails _):
-        _userDragInSequence = true;
+      // The user started driving the scroll (drag, fling, mouse-wheel, or
+      // trackpad). Latch the sequence as user-driven; programmatic
+      // auto-scrolls never emit this.
+      case UserScrollNotification(:final direction)
+          when direction != ScrollDirection.idle:
+        _userScrolling = true;
         if (!_isAtBottom()) _userScrolledAway = true;
-      // Sequence settled. For user-driven scrolls (including a fling whose
-      // ballistic phase carries no drag details), recompute intent from
-      // the resting position: a fling away from the bottom suppresses
-      // auto-scroll; a return to the bottom re-enables it. Programmatic
-      // auto-scrolls that land short of a freshly-grown extent are left
-      // untouched.
-      case ScrollEndNotification() when _userDragInSequence:
-        _userScrolledAway = !_isAtBottom();
+      // User-driven scroll in progress (including a fling's ballistic
+      // coast): suppress as soon as the viewport leaves the bottom, so an
+      // entry arriving mid-scroll doesn't yank it back down.
+      case ScrollUpdateNotification() when _userScrolling:
+        if (!_isAtBottom()) _userScrolledAway = true;
+      // Sequence settled. Resting at the bottom always resumes auto-scroll,
+      // however we got there (user fling back, or an external controller
+      // jumping to bottom). Resting away from the bottom suppresses only
+      // when the user drove the scroll — an auto-scroll that lands short of
+      // a freshly-grown extent must not be mistaken for the user leaving.
+      case ScrollEndNotification():
+        if (_isAtBottom()) {
+          _userScrolledAway = false;
+        } else if (_userScrolling) {
+          _userScrolledAway = true;
+        }
+        _userScrolling = false;
       default:
         break;
     }
