@@ -162,70 +162,69 @@ void main() {
       expect(controller.offset, controller.position.maxScrollExtent);
     });
 
-    testWidgets(
-      'suspends auto-scroll after a fling away from the bottom',
-      (tester) async {
-        final controller = ScrollController();
-        addTearDown(controller.dispose);
+    testWidgets('suspends auto-scroll after a fling away from the bottom', (
+      tester,
+    ) async {
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
 
-        // itemExtent 50 in a 600px viewport: a fling with < 50px of
-        // contact travel never crosses the at-bottom threshold during
-        // the drag, so suppression must come from the post-fling settle.
-        await tester.pumpWidget(
-          Directionality(
-            textDirection: TextDirection.ltr,
-            child: FixedLineView(
-              lineCount: 100,
-              itemExtent: 50.0,
-              autoScroll: AutoScrollBehavior.bottom,
-              controller: controller,
-              lineBuilder: (context, index) => Text('Line $index'),
-            ),
+      // itemExtent 50 in a 600px viewport: a fling with < 50px of
+      // contact travel never crosses the at-bottom threshold during
+      // the drag, so suppression must come from the post-fling settle.
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: FixedLineView(
+            lineCount: 100,
+            itemExtent: 50.0,
+            autoScroll: AutoScrollBehavior.bottom,
+            controller: controller,
+            lineBuilder: (context, index) => Text('Line $index'),
           ),
-        );
-        await tester.pumpAndSettle();
-        expect(controller.offset, controller.position.maxScrollExtent);
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(controller.offset, controller.position.maxScrollExtent);
 
-        // Fast flick: little contact travel (40px < itemExtent), high
-        // velocity (~2000px/s). Momentum carries the viewport up under a
-        // ballistic simulation whose updates carry no drag details.
-        final gesture = await tester.startGesture(
-          tester.getCenter(find.byType(FixedLineView)),
+      // Fast flick: little contact travel (40px < itemExtent), high
+      // velocity (~2000px/s). Momentum carries the viewport up under a
+      // ballistic simulation whose updates carry no drag details.
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.byType(FixedLineView)),
+      );
+      for (var ms = 5; ms <= 40; ms += 5) {
+        await gesture.moveBy(
+          const Offset(0, 5),
+          timeStamp: Duration(milliseconds: ms),
         );
-        for (var ms = 5; ms <= 40; ms += 5) {
-          await gesture.moveBy(
-            const Offset(0, 5),
-            timeStamp: Duration(milliseconds: ms),
-          );
-        }
-        await gesture.up();
-        await tester.pumpAndSettle();
+      }
+      await gesture.up();
+      await tester.pumpAndSettle();
 
-        // Momentum left us well above the bottom.
-        expect(
-          controller.offset,
-          lessThan(controller.position.maxScrollExtent - 50.0),
-        );
-        final flungTo = controller.offset;
+      // Momentum left us well above the bottom.
+      expect(
+        controller.offset,
+        lessThan(controller.position.maxScrollExtent - 50.0),
+      );
+      final flungTo = controller.offset;
 
-        // Appending a line must NOT yank the viewport back to the bottom.
-        await tester.pumpWidget(
-          Directionality(
-            textDirection: TextDirection.ltr,
-            child: FixedLineView(
-              lineCount: 101,
-              itemExtent: 50.0,
-              autoScroll: AutoScrollBehavior.bottom,
-              controller: controller,
-              lineBuilder: (context, index) => Text('Line $index'),
-            ),
+      // Appending a line must NOT yank the viewport back to the bottom.
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: FixedLineView(
+            lineCount: 101,
+            itemExtent: 50.0,
+            autoScroll: AutoScrollBehavior.bottom,
+            controller: controller,
+            lineBuilder: (context, index) => Text('Line $index'),
           ),
-        );
-        await tester.pumpAndSettle();
+        ),
+      );
+      await tester.pumpAndSettle();
 
-        expect(controller.offset, closeTo(flungTo, 0.5));
-      },
-    );
+      expect(controller.offset, closeTo(flungTo, 0.5));
+    });
 
     testWidgets('uses external ScrollController when provided', (tester) async {
       final controller = ScrollController();
