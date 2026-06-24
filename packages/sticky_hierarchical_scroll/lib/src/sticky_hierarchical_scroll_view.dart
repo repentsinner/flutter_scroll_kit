@@ -24,6 +24,9 @@ class StickyHierarchicalScrollView<T> extends StatefulWidget {
   final List<T> items;
 
   /// Extracts the hierarchical level from an item.
+  ///
+  /// Levels are 0-based: the root sits at level 0, its children at level 1,
+  /// and so on. Negative levels are not supported.
   final int Function(T item) getLevel;
 
   /// Returns true if the item is a section header (sticky candidate).
