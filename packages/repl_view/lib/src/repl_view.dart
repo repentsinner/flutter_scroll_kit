@@ -175,9 +175,11 @@ class _ReplViewState<T extends ConsoleEntry> extends State<ReplView<T>> {
   /// Compute the scroll target pixels for the current state. Returns
   /// null when the target can't be computed yet (no clients).
   ///
-  /// As a side effect, clears a stale anchor when its identity is no
-  /// longer present in the entry list — treating this as "anchor
-  /// trimmed out of the scrollback" and falling back to stuck state.
+  /// As a side effect, clears the anchor and falls back to stuck state
+  /// when the anchor returns to the bottom — either because its target
+  /// lands within one item of the tail (matching [_isAtBottom], e.g. a
+  /// trim shrank the list beneath it) or because its identity is no
+  /// longer present in the entry list ("anchor trimmed out").
   double? _computeTargetPixels() {
     if (!_scrollController.hasClients) return null;
     final pos = _scrollController.position;
@@ -189,11 +191,20 @@ class _ReplViewState<T extends ConsoleEntry> extends State<ReplView<T>> {
     for (var i = 0; i < widget.entries.length; i++) {
       if (widget.entries[i].identity == _anchor!.identity) {
         final target = i * widget.itemExtent + _anchor!.offsetWithinEntry;
-        return target.clamp(0.0, pos.maxScrollExtent);
+        // Within one item of the tail counts as "at bottom" (matching
+        // _isAtBottom). Returning to the bottom is a return to stuck, so
+        // fall through and clear the anchor — otherwise later appends
+        // keep snapping back to this now sub-bottom position and
+        // auto-follow stalls.
+        if (target < pos.maxScrollExtent - widget.itemExtent) {
+          return target.clamp(0.0, pos.maxScrollExtent);
+        }
+        break;
       }
     }
 
-    // Anchor content is gone — snap to bottom and clear.
+    // Anchor reached the tail or its content is gone — snap to bottom
+    // and clear, falling back to stuck state.
     _anchor = null;
     return pos.maxScrollExtent;
   }

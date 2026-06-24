@@ -122,10 +122,13 @@ Transitions:
 - stuck → floating: user drags upward, scroll offset falls below
   `maxScrollExtent`.
 - floating → stuck: user drags back to `maxScrollExtent`.
-- floating → stuck (forced): the anchor entry disappears from the
-  scrollback (ring-buffer trim, clear-screen). Without a valid
-  anchor the widget snaps back to the bottom rather than freeze on
-  a stale pixel offset.
+- floating → stuck (forced): the anchored content returns to the
+  bottom. Either the anchor entry disappears from the scrollback
+  (ring-buffer trim, clear-screen), or its resolved target lands
+  within one item of `maxScrollExtent` (a tail trim shrank the list
+  beneath it). In both cases the widget snaps to the tail and resumes
+  following it, rather than freeze on a stale, now sub-bottom pixel
+  offset that would stall auto-follow.
 
 The state machine protects against the most common failure mode:
 coalescing the most recent line (e.g. "ok ×47 → ok ×48") while the
