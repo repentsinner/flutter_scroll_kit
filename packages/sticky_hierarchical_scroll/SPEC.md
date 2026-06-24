@@ -218,12 +218,18 @@ Unit tests cover:
   indices, cumulative offsets in both height modes.
 - Slot-fit filtering: a candidate enters the active set when its
   header passes above its slot and leaves when its scope ends; nested
-  parents transition without lingering.
+  parents transition without lingering, including the stale-header
+  regression after a scope ends.
 - Last-line offset: overlay height shrinks smoothly as a scope ends,
   never negative.
-- External vs internal `ScrollController`: widget disposes only
-  the controller it created.
-- Variable-height position lookup: binary search returns the same
-  index as linear scan for every offset in the domain.
+- Binary-search activation: the strict-less-than boundary returns the
+  correct active subset across scroll positions.
+- An external `ScrollController` drives the overlay.
+
+Internal-controller disposal, variable-height binary-search parity
+against a linear scan over the full offset domain, the
+`onStickyHeaderTap` navigation callback, trailing-item key stability,
+and `stickyDecoration` application remain uncovered (see ROADMAP
+`shs-trailing-key-tests`).
 
 Tests run on the Flutter widget test runner.
