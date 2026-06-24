@@ -188,20 +188,21 @@ enforced by assertion.
 Unit tests cover:
 
 - Hierarchy: input entries become level-0 sections, non-input
-  entries become their leaves; scopes close at the next input.
-- Sticky behavior: when a section's input scrolls above the
-  viewport top, its `entryBuilder` widget pins; the sticky
-  representation is the same widget the list row uses.
+  entries become their leaves.
 - Coalescing render: `count > 1` entries are passed to
   `entryBuilder` unchanged; the widget never dedupes.
 - Viewport state machine:
   - Stuck at bottom after mount; stays stuck through tail appends
     and coalescing updates.
   - Drag up → float; the anchored entry stays under the same
-    viewport pixels across subsequent updates.
+    viewport pixels across coalescing and tail-append updates.
   - Drag back to bottom → stuck.
   - Anchor entry removed → snap to bottom, re-enter stuck.
-- Trailing items: rows appended after `entries` scroll with the
-  content and do not pin.
+- Trailing rows render after `entries`.
+
+Sticky input pinning (an input scrolled above the viewport top pins
+its `entryBuilder` widget), the empty-entries render path, and
+internal-controller disposal remain uncovered (see ROADMAP
+`repl-pinning-tests`).
 
 Tests run on the Flutter widget test runner.

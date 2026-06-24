@@ -139,13 +139,17 @@ positions, it passes a plain `ScrollController` instead.
 
 Unit tests cover:
 
-- Snap math for positive, zero, and negative offsets at multiple
-  item extents and viewport dimensions.
-- Bottom-alignment invariant across extent/viewport combinations.
-- `ScrollMode.pixel` delegates to parent without mutation.
-- `setPixels` quantization holds across drag simulation, fling
-  simulation, and `jumpTo`.
-- `assert(itemExtent > 0)` fires on zero and negative extents.
+- Quantization: `setPixels` holds line-aligned offsets across drag,
+  fling (including every frame of the fling animation), and `jumpTo`;
+  settling rounds to the nearest boundary.
+- `ScrollMode.pixel` scrolls without snapping; `applyTo` preserves
+  `itemExtent` and mode.
+
+Tests exercise a single item extent and viewport at non-negative
+offsets. The bottom-alignment invariant across extent/viewport
+combinations, snap math at negative and zero offsets, and the
+`assert(itemExtent > 0)` guard remain uncovered (see ROADMAP
+`lssp-snap-invariant-tests`).
 
 Tests run on the Flutter test runner because the classes extend Flutter
 scroll primitives. No platform channels required.
