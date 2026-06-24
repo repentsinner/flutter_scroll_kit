@@ -202,18 +202,21 @@ final class FixedLineViewController {
 
 Unit tests cover:
 
-- Virtualization: only the visible window of `lineBuilder` calls fires
-  for large `lineCount`.
-- `AutoScrollBehavior.center`: changing `activeLineIndex` scrolls so
-  the line is centered; no scroll fires when the line is already
-  visible at center.
-- `AutoScrollBehavior.bottom`: new items scroll to bottom; user
-  scrolling up suppresses; scrolling back to bottom resumes.
+- `AutoScrollBehavior.center`: changing `activeLineIndex` scrolls
+  toward centering the line.
+- `AutoScrollBehavior.bottom`: a growing `lineCount` scrolls to the
+  bottom, on both initial build and update.
 - `StreamLineView` ring buffer: items past `maxLines` drop from the
-  head; builder indices stay consistent.
-- Controller ownership: widget disposes its internal controller,
+  head; the stream subscription is cancelled on dispose.
+- Controller ownership: the widget disposes its internal controller,
   never a consumer-supplied one.
-- Line snap: with `lineSnap: true`, scroll offsets are multiples of
-  `itemExtent` under drag, fling, and `jumpTo`.
+- Rendering: item count, `emptyBuilder` fallback, and `SelectionArea`
+  wrapping under `selectable`.
+
+The virtualization bound (only the visible window of `lineBuilder`
+fires for large `lineCount`), `lineSnap` quantization, the center
+no-op when the line is already centered, and bottom-follow
+suppression and resume remain uncovered (see ROADMAP
+`flv-virtualization-tests`).
 
 Tests run on the Flutter widget test runner.
