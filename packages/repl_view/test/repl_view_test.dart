@@ -371,6 +371,54 @@ void main() {
       },
     );
 
+    testWidgets(
+      'anchor landing within one item of the bottom re-enters stuck state',
+      (tester) async {
+        final controller = ScrollController();
+        final entries = _buildEntries(responseCount: 80);
+
+        await tester.pumpWidget(
+          _harness(entries: List.of(entries), controller: controller),
+        );
+        await tester.pumpAndSettle();
+
+        // Float deterministically: jumpTo(600) anchors on entry 37 with an
+        // 8px offset, fixing the anchor target at 600px.
+        controller.jumpTo(600);
+        await tester.pumpAndSettle();
+
+        // Trim so the anchor survives but its target (600) lands inside the
+        // one-item tolerance band below maxScrollExtent: 63 entries give
+        // max = 63*16 - 400 = 608, so 592 <= 600 < 608. _isAtBottom() is
+        // true here, yet the target is strictly below maxScrollExtent — the
+        // case the old `target >= maxScrollExtent` guard missed.
+        entries.removeRange(63, entries.length);
+        await tester.pumpWidget(
+          _harness(entries: List.of(entries), controller: controller),
+        );
+        await tester.pumpAndSettle();
+        // Pin the constructed geometry: max = 608, so the anchor target 600
+        // sits in (592, 608) — at-bottom per _isAtBottom but below max. The
+        // old guard left it floating here; the fix snaps to the tail.
+        expect(controller.position.maxScrollExtent, closeTo(608.0, 0.5));
+
+        // Appending must follow the tail. With a stale sub-bottom anchor,
+        // auto-follow stalls and the view stays pinned ~8px above bottom.
+        for (var i = 0; i < 40; i++) {
+          entries.add(_Entry.response('grow-$i', id: 2000 + i));
+        }
+        await tester.pumpWidget(
+          _harness(entries: List.of(entries), controller: controller),
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          controller.position.pixels,
+          closeTo(controller.position.maxScrollExtent, 0.5),
+        );
+      },
+    );
+
     testWidgets('returning to bottom re-enters stuck state', (tester) async {
       final controller = ScrollController();
       final entries = _buildEntries(responseCount: 60);
