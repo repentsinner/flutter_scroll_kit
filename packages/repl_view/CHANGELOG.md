@@ -5,6 +5,13 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3](https://github.com/repentsinner/flutter_scroll_kit/compare/repl_view-v0.1.2...repl_view-v0.1.3) (2026-06-25)
+
+
+### Bug Fixes
+
+* **repl_view:** re-enter stuck state when an anchored target reaches the bottom ([#24](https://github.com/repentsinner/flutter_scroll_kit/issues/24)) ([6c91e3c](https://github.com/repentsinner/flutter_scroll_kit/commit/6c91e3c52fce547e6793d4b0426ca03af109f306))
+
 ## [0.1.2](https://github.com/repentsinner/flutter_scroll_kit/compare/repl_view-v0.1.1...repl_view-v0.1.2) (2026-06-09)
 
 
