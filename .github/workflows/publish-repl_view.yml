@@ -7,6 +7,9 @@ on:
   push:
     tags:
       - 'repl_view-v[0-9]+.[0-9]+.[0-9]+'
+  # Manual re-publish of the version in pubspec.yaml — used to recover a
+  # release whose tag-triggered run failed before the workflow was fixed.
+  workflow_dispatch:
 
 concurrency:
   group: pub-publish
