@@ -5,6 +5,13 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3](https://github.com/repentsinner/flutter_scroll_kit/compare/fixed_line_view-v0.1.2...fixed_line_view-v0.1.3) (2026-06-25)
+
+
+### Bug Fixes
+
+* **fixed_line_view:** suspend auto-scroll after a fling away from bottom ([#23](https://github.com/repentsinner/flutter_scroll_kit/issues/23)) ([9b3afba](https://github.com/repentsinner/flutter_scroll_kit/commit/9b3afba82a7ff94edf07bb14c1b4205ea063171c))
+
 ## [0.1.2](https://github.com/repentsinner/flutter_scroll_kit/compare/fixed_line_view-v0.1.1...fixed_line_view-v0.1.2) (2026-06-09)
 
 
