@@ -20,3 +20,4 @@ jobs:
     uses: dart-lang/setup-dart/.github/workflows/publish.yml@65eb853c7ba17dde3be364c3d2858773e7144260
     with:
       working-directory: packages/sticky_hierarchical_scroll
+      environment: pub.dev
