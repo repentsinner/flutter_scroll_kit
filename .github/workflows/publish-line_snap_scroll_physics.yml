@@ -24,6 +24,9 @@ on:
   push:
     tags:
       - 'line_snap_scroll_physics-v[0-9]+.[0-9]+.[0-9]+'
+  # Manual re-publish of the version in pubspec.yaml — used to recover a
+  # release whose tag-triggered run failed before the workflow was fixed.
+  workflow_dispatch:
 
 # Shared with the other publish-*.yml workflows for cross-workflow
 # serialization across tag bursts. Do not rename without updating
