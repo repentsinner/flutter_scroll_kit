@@ -196,7 +196,27 @@ final class FixedLineViewController {
 
 ---
 
-## 9. Testing Strategy §spec:flv-testing-strategy
+## 9. Scrollbar Gutter §spec:flv-scrollbar-gutter
+
+*Status: not started*
+
+When a scrollbar is shown over the line view, the view reserves trailing
+space equal to the scrollbar's track width so line content and trailing
+tap targets render clear of the scroll lane. `FixedLineView` wraps a
+bare `ListView.builder` with no gutter hook, so under an ambient desktop
+`ScrollBehavior` scrollbar the trailing edge of each line paints under
+the track and loses pointer events there. Consistent with
+`sticky_hierarchical_scroll` §spec:shs-scrollbar-gutter — the kit
+reserves the gutter uniformly so a consumer composing the two primitives
+does not meet two different trailing-edge rules. Raised alongside #31.
+
+Why: same rationale as the sticky view — the reservation belongs in the
+primitive, tracking live scrollbar state, not in each consumer's per-row
+padding.
+
+---
+
+## 10. Testing Strategy §spec:flv-testing-strategy
 
 *Status: complete*
 

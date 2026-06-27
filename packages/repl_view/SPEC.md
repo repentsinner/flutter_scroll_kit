@@ -184,7 +184,26 @@ enforced by assertion.
 
 ---
 
-## 8. Testing Strategy §spec:repl-testing-strategy
+## 8. Scrollbar Gutter §spec:repl-scrollbar-gutter
+
+*Status: not started*
+
+`repl_view` inherits the scrollbar gutter from
+`StickyHierarchicalScrollView` (§spec:shs-scrollbar-gutter): the reserved
+trailing space flows through to both scrollback rows and the pinned
+sticky input header, since `entryBuilder` renders both. The gutter is
+forwarded, not re-implemented — `repl_view` owns no scrollbar of its own.
+Its trailing-item slots (prompt line, status bar, live output) sit inside
+the same reserved lane, so a trailing affordance on an input row stays
+tappable. Raised alongside #31.
+
+Why: a REPL pins an input header over the scroll lane; without the
+forwarded gutter the pinned header's trailing controls would collide with
+the scrollbar exactly where the user reaches for them.
+
+---
+
+## 9. Testing Strategy §spec:repl-testing-strategy
 
 *Status: complete*
 
