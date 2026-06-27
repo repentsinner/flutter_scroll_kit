@@ -167,6 +167,7 @@ class FixedLineView extends StatefulWidget {
     bool selectable = false,
     Color? selectionColor,
     bool lineSnap = false,
+    double? scrollbarGutter,   // null → auto from theme; 0 → disabled
   });
 }
 
@@ -184,6 +185,7 @@ class StreamLineView<T> extends StatefulWidget {
     bool selectable = false,
     Color? selectionColor,
     bool lineSnap = false,
+    double? scrollbarGutter,   // forwarded to FixedLineView
   });
 }
 
@@ -200,19 +202,49 @@ final class FixedLineViewController {
 
 *Status: not started*
 
-When a scrollbar is shown over the line view, the view reserves trailing
-space equal to the scrollbar's track width so line content and trailing
-tap targets render clear of the scroll lane. `FixedLineView` wraps a
-bare `ListView.builder` with no gutter hook, so under an ambient desktop
-`ScrollBehavior` scrollbar the trailing edge of each line paints under
-the track and loses pointer events there. Consistent with
-`sticky_hierarchical_scroll` §spec:shs-scrollbar-gutter — the kit
-reserves the gutter uniformly so a consumer composing the two primitives
-does not meet two different trailing-edge rules. Raised alongside #31.
+Implements §req:problem-statement: the primitive owns its own correct
+layout so line content stays clear of the scroll lane without
+per-consumer padding.
 
-Why: same rationale as the sticky view — the reservation belongs in the
-primitive, tracking live scrollbar state, not in each consumer's per-row
-padding.
+`FixedLineView` reserves a trailing gutter on the scrollbar edge so line
+content and trailing tap targets render clear of the lane. Without it the
+bare `ListView.builder` runs full-width and the ambient desktop
+`ScrollBehavior` scrollbar paints over the trailing edge — text is
+clipped under the thumb and pointer events in that strip hit the
+scrollbar. `StreamLineView` forwards the parameter to the `FixedLineView`
+it wraps, so both views share one rule.
+
+`scrollbarGutter` carries the same contract as
+§spec:shs-scrollbar-gutter — `double?`, `null` (default) auto-derives
+from the effective `ScrollbarThemeData.thickness` with the Material
+default as fallback, `0` disables the gutter for full-bleed content, a
+positive value reserves exactly that width — and the same **static,
+uniform** reservation (present in every layout state on every platform,
+not gated on thumb visibility or platform). A consumer setting the gutter
+on a `FixedLineView` and a `StickyHierarchicalScrollView` meets one
+trailing-edge rule, not two.
+
+Unlike the sticky view, `FixedLineView` does not render its own
+`Scrollbar` — it reserves the gutter as a trailing `ListView` padding
+inset and leaves the bar to the ambient `ScrollBehavior`, which paints
+into the reserved strip. Two reasons:
+
+- *Composition* (§spec:flv-composition): `FixedLineView` and
+  `StickyHierarchicalScrollView` share one `ScrollController`, and the
+  sticky view already owns a `Scrollbar`. A second `Scrollbar` in the
+  line view would paint two bars over the same scroll position.
+- *Minimal chrome:* the line view deliberately delegates scrollbar
+  rendering to the ambient behavior; reserving a padding inset adds the
+  gutter without taking ownership of the bar.
+
+Rejected — owning a `Scrollbar` to mirror the sticky view: gains
+self-contained bar/gutter alignment but reintroduces the double-bar
+composition hazard, so the alignment is instead guaranteed by both
+widgets deriving the width from the same `ScrollbarThemeData`.
+
+Tradeoff accepted: every consumer loses the gutter width of horizontal
+space, including platforms where the scrollbar never intercepts input;
+full-bleed consumers opt out with `scrollbarGutter: 0`.
 
 ---
 
