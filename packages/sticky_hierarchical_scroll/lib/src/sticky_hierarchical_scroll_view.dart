@@ -68,6 +68,20 @@ class StickyHierarchicalScrollView<T> extends StatefulWidget {
   /// trailing range (not the global list index).
   final Widget Function(BuildContext context, int index)? trailingItemBuilder;
 
+  /// Trailing gutter reserved for the scrollbar lane.
+  ///
+  /// Both the scrolling rows and the sticky-header overlay are inset by
+  /// this width on the trailing edge, keeping trailing content and tap
+  /// targets clear of the scrollbar thumb. The gutter is static — present
+  /// in every layout state regardless of whether the thumb is painted.
+  ///
+  /// - `null` (default): auto-derive from the effective
+  ///   [ScrollbarThemeData.thickness], falling back to the Material
+  ///   default (8.0) when the theme leaves it unset.
+  /// - `0`: disable the gutter for full-bleed content.
+  /// - positive: reserve exactly that width.
+  final double? scrollbarGutter;
+
   /// Uniform-height constructor. All rows share [itemExtent].
   const StickyHierarchicalScrollView({
     super.key,
@@ -82,7 +96,13 @@ class StickyHierarchicalScrollView<T> extends StatefulWidget {
     this.onStickyHeaderTap,
     this.trailingItemCount = 0,
     this.trailingItemBuilder,
-  }) : itemHeight = null;
+    this.scrollbarGutter,
+  }) : assert(
+         scrollbarGutter == null || scrollbarGutter >= 0,
+         'scrollbarGutter must be null or a non-negative width '
+         '(>= 0 also rejects NaN)',
+       ),
+       itemHeight = null;
 
   /// Variable-height constructor. Each item's height comes from
   /// [itemHeight]. A cumulative offset table is precomputed for
@@ -100,7 +120,13 @@ class StickyHierarchicalScrollView<T> extends StatefulWidget {
     this.onStickyHeaderTap,
     this.trailingItemCount = 0,
     this.trailingItemBuilder,
-  }) : itemExtent = null;
+    this.scrollbarGutter,
+  }) : assert(
+         scrollbarGutter == null || scrollbarGutter >= 0,
+         'scrollbarGutter must be null or a non-negative width '
+         '(>= 0 also rejects NaN)',
+       ),
+       itemExtent = null;
 
   @override
   State<StickyHierarchicalScrollView<T>> createState() =>
@@ -455,6 +481,21 @@ class _StickyHierarchicalScrollViewState<T>
 
   // -- Rendering --
 
+  /// Material default scrollbar thickness, used when the theme leaves
+  /// [ScrollbarThemeData.thickness] unset. Mirrors the Material
+  /// `Scrollbar` desktop/web default.
+  static const double _kDefaultScrollbarThickness = 8.0;
+
+  /// Trailing gutter width to reserve for the scrollbar lane.
+  ///
+  /// `null` auto-derives from the effective [ScrollbarThemeData.thickness]
+  /// (the same source the wrapping [Scrollbar] renders from), falling back
+  /// to [_kDefaultScrollbarThickness].
+  double _resolveScrollbarGutter() =>
+      widget.scrollbarGutter ??
+      ScrollbarTheme.of(context).thickness?.resolve(const <WidgetState>{}) ??
+      _kDefaultScrollbarThickness;
+
   /// Build a single sticky header widget at [top] position.
   Widget _buildHeaderWidget(StickyCandidate<T> header, double top) {
     return Positioned(
@@ -499,6 +540,7 @@ class _StickyHierarchicalScrollViewState<T>
 
   @override
   Widget build(BuildContext context) {
+    final gutter = _resolveScrollbarGutter();
     return Scrollbar(
       controller: _scrollController,
       child: Stack(
@@ -530,7 +572,10 @@ class _StickyHierarchicalScrollViewState<T>
                     }
                   : null,
               physics: widget.physics,
-              padding: EdgeInsets.zero,
+              // Reserve the scrollbar lane on the trailing edge so rows
+              // and tap targets stay clear of the thumb. Replaces the
+              // former full-bleed EdgeInsets.zero.
+              padding: EdgeInsetsDirectional.only(end: gutter),
               // Match trailing items by key across index shifts.
               // Without this, adding a data item shifts all trailing
               // indices, causing ListView to dispose and recreate
@@ -563,10 +608,12 @@ class _StickyHierarchicalScrollViewState<T>
             ),
           ),
 
-          Positioned(
+          // Inset the overlay by the same trailing gutter so pinned
+          // headers align with the scrolling rows and clear the thumb.
+          PositionedDirectional(
             top: 0,
-            left: 0,
-            right: 0,
+            start: 0,
+            end: gutter,
             child: ListenableBuilder(
               listenable: _scrollController,
               builder: (context, _) {

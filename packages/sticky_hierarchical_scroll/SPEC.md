@@ -214,61 +214,56 @@ class StickyHierarchicalScrollView<T> extends StatefulWidget {
 
 ## 10. Scrollbar Gutter §spec:shs-scrollbar-gutter
 
-*Status: not started*
+*Status: complete*
 
 Implements §req:problem-statement: the primitive owns its own correct
 layout so consumers don't re-pad to keep trailing content out of the
 scroll lane.
 
-The view reserves a trailing gutter on the edge the scrollbar occupies.
-Both the scrollable rows (`itemBuilder` and trailing items) and the
-sticky-header overlay (`stickyHeaderBuilder`) are inset by the gutter,
-so a trailing affordance stays clear of the lane in scrolling rows and
-pinned headers alike. Without it the inner `ListView` runs full-width
-under `padding: EdgeInsets.zero` and the overlay scrollbar paints over
-the trailing edge — trailing text is clipped under the thumb and, on
-desktop, the interactive scrollbar intercepts pointer events there so a
-trailing `IconButton` cannot be tapped. Reported in #31.
+The view reserves a trailing gutter on the scrollbar edge. Both the
+scrolling rows and the sticky-header overlay are inset by the gutter, so
+a trailing affordance stays clear of the lane in scrolling rows and
+pinned headers alike. Without it the overlay scrollbar paints over the
+trailing edge — trailing text is clipped under the thumb and, on
+desktop, the interactive scrollbar intercepts pointer events so a
+trailing `IconButton` there cannot be tapped. Reported in #31.
 
-The gutter is static — present in every layout state, independent of
-whether the thumb is currently painted. The Material `Scrollbar` is
-transient on most platforms (iOS, Android, macOS); a visibility-gated
-gutter would reflow content on every scroll as the thumb fades in and
-out. A static reservation keeps trailing content stable.
+`scrollbarGutter` (`double?`) sets the width: `null` (default)
+auto-derives from the effective `ScrollbarThemeData.thickness`, with the
+Material default as fallback; `0` disables the gutter for full-bleed
+content; a positive value reserves exactly that width.
 
-`scrollbarGutter` sets the width. `null` (default) auto-derives it from
-the effective `ScrollbarThemeData` thickness — the same source the
-wrapping `Scrollbar` renders from, with the Material default as
-fallback — so the reservation tracks the configured scrollbar width
-rather than a guessed constant. `0` disables the gutter for consumers
-who want full-bleed content and accept thumb occlusion. A positive
-value reserves exactly that width.
+The gutter is **static and uniform** — present in every layout state on
+every platform, independent of whether the thumb is currently painted.
+Two decisions drive this:
 
-Why reserve uniformly rather than per platform: the thumb occludes the
-lane whenever it appears, on transient-scrollbar platforms (macOS,
-mobile) as much as on persistent-scrollbar desktop. A platform-gated
-default would leave the visual collision unsolved where it is most
-common. Desktop additionally adds pointer interception on top of the
-occlusion. One uniform reservation covers both.
+- *Static, not visibility-gated.* The Material `Scrollbar` is transient
+  on most platforms (iOS, Android, macOS). Reserving only while the
+  thumb shows would reflow content on every scroll as the bar fades —
+  jitter. A static reservation keeps trailing content stable.
+- *Uniform, not platform-gated.* The thumb occludes the lane whenever it
+  appears, on transient-scrollbar platforms as much as persistent
+  desktop ones; desktop adds pointer interception on top. A
+  platform-gated default would leave the collision unsolved where it is
+  most common. One reservation covers both.
+
+Auto-deriving from the theme thickness (the same source the wrapping
+`Scrollbar` renders from) keeps the reservation tracking the configured
+scrollbar width rather than a guessed constant.
 
 Alternatives rejected:
 
-- **Per-consumer padding** (the issue's documented ~12px workaround):
-  every caller repeats it across rows and the overlay and it drifts
-  from the real scrollbar width. Putting correctness in the primitive
-  serves the §req:problem-statement composability goal.
-- **Visibility-gated gutter** (reserve only while the thumb shows):
-  reflows content on every scroll as a transient bar fades — jitter.
-- **Platform-gated default** (desktop/web only): leaves transient
-  platforms occluded; see above.
-- **An `EdgeInsets` knob:** only the trailing inset matters; a
-  full-edge knob duplicates `ListView.padding` and invites misuse. One
-  `double?` is enough.
+- **Per-consumer padding** (the issue's ~12px workaround): every caller
+  repeats it across rows and the overlay, and it drifts from the real
+  scrollbar width. Correctness belongs in the primitive.
+- **An `EdgeInsets` knob:** only the trailing inset matters; a full-edge
+  knob duplicates `ListView.padding` and invites misuse. One `double?`
+  is enough.
 
 Tradeoff accepted: every consumer loses the gutter width of horizontal
-content space, including platforms where the scrollbar never intercepts
-input. Full-bleed consumers opt out with `scrollbarGutter: 0`. Pre-1.0,
-the layout change to existing consumers is acceptable.
+space, including platforms where the scrollbar never intercepts input.
+Full-bleed consumers opt out with `scrollbarGutter: 0`. Pre-1.0 the
+layout change to existing consumers is acceptable.
 
 ---
 
