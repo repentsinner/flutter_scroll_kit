@@ -44,14 +44,15 @@ overlay scrollbar also steals their pointer events. Reported in #31 for
 gains a `Scrollbar Gutter` section. Ordered by the dependency graph — the
 sticky base package first, its consumers next.
 
-- **shs-scrollbar-gutter**: reserve a trailing gutter in
-  `StickyHierarchicalScrollView` equal to the shown scrollbar's track
-  width, applied to both the inner `ListView` and the sticky-header
-  overlay. Replace the hardcoded `padding: EdgeInsets.zero`. Mechanism
-  (auto-reserve vs. an exposed `scrollbarGutter` parameter) is a `/plan`
-  decision. **Verify:** with the scrollbar shown, a trailing `IconButton`
-  in an `itemBuilder` row fires on click and trailing text is not clipped
-  under the thumb.
+- **shs-scrollbar-gutter**: add a `scrollbarGutter` parameter to both
+  `StickyHierarchicalScrollView` constructors and inset the inner
+  `ListView` padding and the sticky-header overlay by it, defaulting to
+  the theme-derived scrollbar thickness and replacing `padding:
+  EdgeInsets.zero` (`sticky_hierarchical_scroll_view.dart`); see
+  §spec:shs-scrollbar-gutter. **Verify:** with the scrollbar shown, a
+  trailing `IconButton` in an `itemBuilder` row fires on click, a
+  trailing affordance in a pinned sticky header fires, trailing text
+  clears the thumb, and `scrollbarGutter: 0` restores full-bleed.
 - **flv-scrollbar-gutter**: reserve the same trailing gutter in
   `FixedLineView` / `StreamLineView` when a scrollbar is shown over the
   list. **Verify:** under an ambient desktop scrollbar, a trailing tap
