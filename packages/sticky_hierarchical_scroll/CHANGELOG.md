@@ -5,6 +5,13 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3](https://github.com/repentsinner/flutter_scroll_kit/compare/sticky_hierarchical_scroll-v0.1.2...sticky_hierarchical_scroll-v0.1.3) (2026-06-27)
+
+
+### Features
+
+* **sticky_hierarchical_scroll:** reserve scrollbar gutter ([#35](https://github.com/repentsinner/flutter_scroll_kit/issues/35)) ([6bc7348](https://github.com/repentsinner/flutter_scroll_kit/commit/6bc7348c125ea171bff660fd4605886dccbf5b22))
+
 ## [0.1.2](https://github.com/repentsinner/flutter_scroll_kit/compare/sticky_hierarchical_scroll-v0.1.1...sticky_hierarchical_scroll-v0.1.2) (2026-06-09)
 
 
