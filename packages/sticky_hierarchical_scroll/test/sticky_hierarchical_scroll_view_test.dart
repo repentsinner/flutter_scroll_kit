@@ -337,4 +337,259 @@ void main() {
       expect(find.byKey(const ValueKey('sticky_3')), findsOneWidget);
     });
   });
+
+  group('StickyHierarchicalScrollView scrollbar gutter', () {
+    // Items: one section header (sticky candidate) plus enough leaves to
+    // scroll, so a header can pin and we can probe both a scrolling row
+    // and a pinned header.
+    final gutterItems = <_TestItem>[
+      const _TestItem('Section A', 0, isSection: true), // idx 0
+      for (int i = 1; i <= 20; i++) _TestItem('item $i', 1), // idx 1..20
+    ];
+
+    // The default Material scrollbar thickness used as the auto fallback.
+    const double materialThickness = 8.0;
+    const double viewportWidth = 300.0;
+
+    /// Builds a harness whose rows and sticky header each carry a trailing
+    /// IconButton aligned to the right edge, so we can test whether the
+    /// gutter keeps it clear of the scroll lane.
+    Widget buildGutterHarness({
+      required double? scrollbarGutter,
+      required ScrollController controller,
+      VoidCallback? onRowTap,
+      VoidCallback? onHeaderTap,
+    }) {
+      return MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            height: 200,
+            width: viewportWidth,
+            child: StickyHierarchicalScrollView<_TestItem>(
+              items: gutterItems,
+              getLevel: (item) => item.level,
+              isSection: (item) => item.isSection,
+              itemExtent: 20.0,
+              controller: controller,
+              scrollbarGutter: scrollbarGutter,
+              itemBuilder: (context, item, index) {
+                return Row(
+                  children: [
+                    Expanded(
+                      child: Text(item.name, key: ValueKey('item_$index')),
+                    ),
+                    IconButton(
+                      key: ValueKey('row_btn_$index'),
+                      padding: EdgeInsets.zero,
+                      iconSize: 16,
+                      onPressed: onRowTap,
+                      icon: const Icon(Icons.add),
+                    ),
+                  ],
+                );
+              },
+              config: StickyScrollConfig<_TestItem>(
+                stickyHeaderBuilder: (context, candidate) {
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          candidate.data.name,
+                          key: ValueKey('sticky_${candidate.originalIndex}'),
+                        ),
+                      ),
+                      IconButton(
+                        key: ValueKey('header_btn_${candidate.originalIndex}'),
+                        padding: EdgeInsets.zero,
+                        iconSize: 16,
+                        onPressed: onHeaderTap,
+                        icon: const Icon(Icons.add),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    testWidgets('default gutter insets the inner ListView by theme thickness', (
+      tester,
+    ) async {
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        buildGutterHarness(scrollbarGutter: null, controller: controller),
+      );
+      await tester.pump();
+
+      // The trailing edge of a row's content must clear the scroll lane:
+      // the row's right edge sits at viewportWidth - gutter.
+      final btn = tester.getRect(find.byKey(const ValueKey('row_btn_0')));
+      expect(
+        btn.right,
+        moreOrLessEquals(viewportWidth - materialThickness, epsilon: 0.5),
+      );
+    });
+
+    testWidgets('default gutter insets the sticky-header overlay', (
+      tester,
+    ) async {
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        buildGutterHarness(scrollbarGutter: null, controller: controller),
+      );
+      await tester.pump();
+
+      // Scroll so Section A pins as a sticky overlay.
+      controller.jumpTo(80.0);
+      await tester.pump();
+
+      expect(find.byKey(const ValueKey('sticky_0')), findsOneWidget);
+      final headerBtn = tester.getRect(
+        find.byKey(const ValueKey('header_btn_0')),
+      );
+      expect(
+        headerBtn.right,
+        moreOrLessEquals(viewportWidth - materialThickness, epsilon: 0.5),
+      );
+    });
+
+    testWidgets('trailing IconButton in a row fires when gutter shown', (
+      tester,
+    ) async {
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+      var fired = false;
+
+      await tester.pumpWidget(
+        buildGutterHarness(
+          scrollbarGutter: null,
+          controller: controller,
+          onRowTap: () => fired = true,
+        ),
+      );
+      await tester.pump();
+
+      await tester.tap(find.byKey(const ValueKey('row_btn_0')));
+      expect(fired, isTrue);
+    });
+
+    testWidgets('trailing affordance in a pinned header fires', (tester) async {
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+      var fired = false;
+
+      await tester.pumpWidget(
+        buildGutterHarness(
+          scrollbarGutter: null,
+          controller: controller,
+          onHeaderTap: () => fired = true,
+        ),
+      );
+      await tester.pump();
+
+      controller.jumpTo(80.0);
+      await tester.pump();
+      expect(find.byKey(const ValueKey('sticky_0')), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('header_btn_0')));
+      expect(fired, isTrue);
+    });
+
+    testWidgets('explicit positive gutter reserves exactly that width', (
+      tester,
+    ) async {
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+      const explicit = 24.0;
+
+      await tester.pumpWidget(
+        buildGutterHarness(scrollbarGutter: explicit, controller: controller),
+      );
+      await tester.pump();
+
+      final btn = tester.getRect(find.byKey(const ValueKey('row_btn_0')));
+      expect(
+        btn.right,
+        moreOrLessEquals(viewportWidth - explicit, epsilon: 0.5),
+      );
+    });
+
+    testWidgets('scrollbarGutter: 0 restores full-bleed', (tester) async {
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        buildGutterHarness(scrollbarGutter: 0, controller: controller),
+      );
+      await tester.pump();
+
+      final btn = tester.getRect(find.byKey(const ValueKey('row_btn_0')));
+      expect(btn.right, moreOrLessEquals(viewportWidth, epsilon: 0.5));
+
+      controller.jumpTo(80.0);
+      await tester.pump();
+      expect(find.byKey(const ValueKey('sticky_0')), findsOneWidget);
+      final headerBtn = tester.getRect(
+        find.byKey(const ValueKey('header_btn_0')),
+      );
+      expect(headerBtn.right, moreOrLessEquals(viewportWidth, epsilon: 0.5));
+    });
+
+    testWidgets('gutter tracks a custom ScrollbarThemeData thickness', (
+      tester,
+    ) async {
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+      const customThickness = 14.0;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(
+            scrollbarTheme: const ScrollbarThemeData(
+              thickness: WidgetStatePropertyAll<double>(customThickness),
+            ),
+          ),
+          home: Scaffold(
+            body: SizedBox(
+              height: 200,
+              width: viewportWidth,
+              child: StickyHierarchicalScrollView<_TestItem>(
+                items: gutterItems,
+                getLevel: (item) => item.level,
+                isSection: (item) => item.isSection,
+                itemExtent: 20.0,
+                controller: controller,
+                itemBuilder: (context, item, index) => Align(
+                  alignment: Alignment.centerRight,
+                  child: SizedBox(
+                    key: ValueKey('probe_$index'),
+                    width: 4,
+                    height: 4,
+                  ),
+                ),
+                config: StickyScrollConfig<_TestItem>(
+                  stickyHeaderBuilder: (context, candidate) =>
+                      Text(candidate.data.name),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final probe = tester.getRect(find.byKey(const ValueKey('probe_0')));
+      expect(
+        probe.right,
+        moreOrLessEquals(viewportWidth - customThickness, epsilon: 0.5),
+      );
+    });
+  });
 }
