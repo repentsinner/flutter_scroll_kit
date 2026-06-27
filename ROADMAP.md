@@ -34,3 +34,30 @@ dependency graph — base packages first.
   the viewport top pins its `entryBuilder` widget at the viewport top),
   the empty-entries render path, and internal-controller disposal.
   Depends on `shs-trailing-key-tests` for the pinning harness.
+
+## Reserve scrollbar gutters across scrolling primitives
+
+The scrolling primitives reserve no space for the scrollbar, so trailing
+content and tap targets render under the scroll lane — on desktop the
+overlay scrollbar also steals their pointer events. Reported in #31 for
+`sticky_hierarchical_scroll`; the gap is repo-wide. Each package's SPEC
+gains a `Scrollbar Gutter` section. Ordered by the dependency graph — the
+sticky base package first, its consumers next.
+
+- **shs-scrollbar-gutter**: reserve a trailing gutter in
+  `StickyHierarchicalScrollView` equal to the shown scrollbar's track
+  width, applied to both the inner `ListView` and the sticky-header
+  overlay. Replace the hardcoded `padding: EdgeInsets.zero`. Mechanism
+  (auto-reserve vs. an exposed `scrollbarGutter` parameter) is a `/plan`
+  decision. **Verify:** with the scrollbar shown, a trailing `IconButton`
+  in an `itemBuilder` row fires on click and trailing text is not clipped
+  under the thumb.
+- **flv-scrollbar-gutter**: reserve the same trailing gutter in
+  `FixedLineView` / `StreamLineView` when a scrollbar is shown over the
+  list. **Verify:** under an ambient desktop scrollbar, a trailing tap
+  target on a line fires and trailing text clears the track. Depends on
+  shs-scrollbar-gutter for the shared gutter contract.
+- **repl-scrollbar-gutter**: forward the sticky view's gutter through
+  `ReplView` to scrollback rows, the pinned input header, and trailing
+  slots. **Verify:** a trailing affordance on a pinned input header is
+  tappable with the scrollbar shown. Depends on shs-scrollbar-gutter.

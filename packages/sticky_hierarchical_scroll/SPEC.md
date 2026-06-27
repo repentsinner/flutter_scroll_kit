@@ -208,7 +208,28 @@ class StickyHierarchicalScrollView<T> extends StatefulWidget {
 
 ---
 
-## 10. Testing Strategy §spec:shs-testing-strategy
+## 10. Scrollbar Gutter §spec:shs-scrollbar-gutter
+
+*Status: not started*
+
+When the scrollbar is shown, the view reserves trailing space equal to
+the scrollbar's track width so row content and trailing tap targets —
+from both `itemBuilder` and `stickyHeaderBuilder` — render clear of the
+scroll lane. Today the inner `ListView` hardcodes `padding:
+EdgeInsets.zero` and exposes no gutter hook, so the overlay scrollbar
+paints over the trailing edge; on desktop it also intercepts pointer
+events there, so a trailing `IconButton` cannot be tapped and trailing
+text is clipped under the thumb. Reported in #31.
+
+Why at the framework level: a per-consumer right-pad workaround forces
+every caller to repeat it across rows and the header overlay, and a
+guessed constant cannot track the scrollbar's actual width or
+visibility. Reserving the gutter once, against live scrollbar state,
+keeps the trailing edge interactive without consumer bookkeeping.
+
+---
+
+## 11. Testing Strategy §spec:shs-testing-strategy
 
 *Status: complete*
 
