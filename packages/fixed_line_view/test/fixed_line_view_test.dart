@@ -424,5 +424,202 @@ void main() {
         expect(controller.offset, greaterThan(0.0));
       },
     );
+
+    testWidgets('builds only the visible window for a large lineCount', (
+      tester,
+    ) async {
+      const itemExtent = 20.0;
+      const viewportHeight = 200.0; // 10 visible lines.
+      const lineCount = 10000;
+      final builtIndices = <int>{};
+
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Center(
+            child: SizedBox(
+              height: viewportHeight,
+              child: FixedLineView(
+                lineCount: lineCount,
+                itemExtent: itemExtent,
+                lineBuilder: (context, index) {
+                  builtIndices.add(index);
+                  return Text('Line $index');
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // ListView.builder virtualizes: only the ~10 visible lines plus the
+      // 250px default cacheExtent (~12 more above and below) are built.
+      // A generous bound proves virtualization without pinning the exact
+      // cacheExtent behavior. Far below lineCount.
+      expect(builtIndices.length, lessThan(100));
+      expect(builtIndices, isNot(contains(9999)));
+    });
+
+    testWidgets('lineSnap quantizes the offset to a line boundary on drag', (
+      tester,
+    ) async {
+      const itemExtent = 20.0;
+      const viewportHeight = 200.0; // Divisible by itemExtent.
+
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Center(
+            child: SizedBox(
+              height: viewportHeight,
+              child: FixedLineView(
+                lineCount: 1000,
+                itemExtent: itemExtent,
+                lineSnap: true,
+                lineBuilder: (context, index) => Text('Line $index'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Drag to a non-boundary amount; lineSnap physics must settle on a
+      // line boundary. The widget owns the controller internally, so read
+      // the offset off the Scrollable's position.
+      await tester.drag(find.byType(FixedLineView), const Offset(0, -73));
+      await tester.pumpAndSettle();
+
+      final position = tester
+          .state<ScrollableState>(find.byType(Scrollable))
+          .position;
+      expect(position.pixels % itemExtent, closeTo(0.0, 0.01));
+      expect(position.pixels, greaterThan(0.0));
+    });
+
+    testWidgets('lineSnap quantizes the offset to a line boundary on fling', (
+      tester,
+    ) async {
+      const itemExtent = 20.0;
+      const viewportHeight = 200.0;
+
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Center(
+            child: SizedBox(
+              height: viewportHeight,
+              child: FixedLineView(
+                lineCount: 1000,
+                itemExtent: itemExtent,
+                lineSnap: true,
+                lineBuilder: (context, index) => Text('Line $index'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.fling(
+        find.byType(FixedLineView),
+        const Offset(0, -300),
+        1000,
+      );
+      await tester.pumpAndSettle();
+
+      final position = tester
+          .state<ScrollableState>(find.byType(Scrollable))
+          .position;
+      expect(position.pixels % itemExtent, closeTo(0.0, 0.01));
+      expect(position.pixels, greaterThan(0.0));
+    });
+
+    testWidgets('re-centering an already-centered line does not scroll', (
+      tester,
+    ) async {
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+
+      const itemExtent = 20.0;
+      const viewportHeight = 200.0; // Divisible by itemExtent.
+
+      Widget build(int active) => Directionality(
+        textDirection: TextDirection.ltr,
+        child: Center(
+          child: SizedBox(
+            height: viewportHeight,
+            child: FixedLineView(
+              lineCount: 1000,
+              itemExtent: itemExtent,
+              autoScroll: AutoScrollBehavior.center,
+              activeLineIndex: active,
+              controller: controller,
+              lineBuilder: (context, index) => Text('Line $index'),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(build(0));
+      await tester.pumpWidget(build(500));
+      await tester.pumpAndSettle();
+
+      final centeredOffset = controller.offset;
+      expect(centeredOffset, greaterThan(0.0));
+
+      // The centered target for index 500 is
+      //   500*20 - 200/2 + 20 = 10000 - 100 + 20 = 9920.
+      // Index 501's centered target is 9940; pick a different active line
+      // whose centered target equals the current offset so re-centering is a
+      // no-op. centeredTarget(K) = centeredTarget(500) => K == 500. Re-asserting
+      // the same active line must therefore not move the offset.
+      await tester.pumpWidget(build(500));
+      await tester.pumpAndSettle();
+
+      expect(controller.offset, closeTo(centeredOffset, 0.5));
+    });
+
+    testWidgets(
+      'bottom-follow suppresses on drag-away then resumes at bottom',
+      (tester) async {
+        final controller = ScrollController();
+        addTearDown(controller.dispose);
+
+        // (a) Start stuck to the bottom.
+        await tester.pumpWidget(_bottomView(controller, 100));
+        await tester.pumpAndSettle();
+        expect(controller.offset, controller.position.maxScrollExtent);
+
+        // (b) User drags up (away from bottom). tester.drag emits a
+        // UserScrollNotification, which latches suppression.
+        await tester.drag(find.byType(FixedLineView), const Offset(0, 200));
+        await tester.pumpAndSettle();
+        final draggedTo = controller.offset;
+        expect(
+          draggedTo,
+          lessThan(controller.position.maxScrollExtent - _itemExtent),
+        );
+
+        // Growing the content must NOT yank back to the new bottom.
+        await tester.pumpWidget(_bottomView(controller, 110));
+        await tester.pumpAndSettle();
+        expect(
+          controller.offset,
+          lessThan(controller.position.maxScrollExtent),
+        );
+        expect(controller.offset, closeTo(draggedTo, 0.5));
+
+        // (c) User drags back down to the bottom — resumes follow.
+        await tester.drag(find.byType(FixedLineView), const Offset(0, -10000));
+        await tester.pumpAndSettle();
+        expect(controller.offset, controller.position.maxScrollExtent);
+
+        // Growing again now auto-follows to the new bottom.
+        await tester.pumpWidget(_bottomView(controller, 120));
+        await tester.pumpAndSettle();
+        expect(controller.offset, controller.position.maxScrollExtent);
+      },
+    );
   });
 }

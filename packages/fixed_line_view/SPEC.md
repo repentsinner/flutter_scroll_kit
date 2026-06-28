@@ -257,11 +257,14 @@ Unit tests cover:
   never a consumer-supplied one.
 - Rendering: item count, `emptyBuilder` fallback, and `SelectionArea`
   wrapping under `selectable`.
-
-The virtualization bound (only the visible window of `lineBuilder`
-fires for large `lineCount`), `lineSnap` quantization, the center
-no-op when the line is already centered, and bottom-follow
-suppression and resume remain uncovered (see ROADMAP
-`flv-virtualization-tests`).
+- Virtualization bound: a 10000-line list builds only the visible
+  window plus `ListView`'s cache extent — never the trailing index.
+- `lineSnap` wiring: after a drag or fling, the offset settles on a
+  line boundary (`offset % itemExtent == 0`).
+- `AutoScrollBehavior.center` no-op: re-centering an already-centered
+  line leaves the offset unchanged.
+- `AutoScrollBehavior.bottom` suppression and resume: a user drag away
+  from the bottom suppresses auto-follow on new content; a user drag
+  back to the bottom resumes it.
 
 Tests run on the Flutter widget test runner.
