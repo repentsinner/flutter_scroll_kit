@@ -25,7 +25,12 @@ class FixedLineView extends StatefulWidget {
     this.selectable = false,
     this.selectionColor,
     this.lineSnap = false,
-  });
+    this.scrollbarGutter,
+  }) : assert(
+         scrollbarGutter == null || scrollbarGutter >= 0,
+         'scrollbarGutter must be null or a non-negative width '
+         '(>= 0 also rejects NaN)',
+       );
 
   /// Total number of lines.
   final int lineCount;
@@ -71,6 +76,22 @@ class FixedLineView extends StatefulWidget {
   /// drag, fling, or programmatic scroll. Overrides [controller] and
   /// [physics] with line-snapping variants.
   final bool lineSnap;
+
+  /// Trailing gutter reserved for the scrollbar lane.
+  ///
+  /// Inset as a trailing [ListView] padding so line content and trailing
+  /// tap targets stay clear of the ambient scrollbar thumb. The gutter is
+  /// static — present in every layout state regardless of whether the thumb
+  /// is painted. [FixedLineView] does not render its own [Scrollbar]; it
+  /// leaves the bar to the ambient [ScrollBehavior], which paints into the
+  /// reserved strip.
+  ///
+  /// - `null` (default): auto-derive from the effective
+  ///   [ScrollbarThemeData.thickness], falling back to the Material
+  ///   default (8.0) when the theme leaves it unset.
+  /// - `0`: disable the gutter for full-bleed content.
+  /// - positive: reserve exactly that width.
+  final double? scrollbarGutter;
 
   @override
   State<FixedLineView> createState() => _FixedLineViewState();
@@ -223,6 +244,21 @@ class _FixedLineViewState extends State<FixedLineView> {
     super.dispose();
   }
 
+  /// Material default scrollbar thickness, used when the theme leaves
+  /// [ScrollbarThemeData.thickness] unset. Mirrors the Material
+  /// `Scrollbar` desktop/web default.
+  static const double _kDefaultScrollbarThickness = 8.0;
+
+  /// Trailing gutter width to reserve for the scrollbar lane.
+  ///
+  /// `null` auto-derives from the effective [ScrollbarThemeData.thickness]
+  /// (the same source the ambient [Scrollbar] renders from), falling back
+  /// to [_kDefaultScrollbarThickness].
+  double _resolveScrollbarGutter() =>
+      widget.scrollbarGutter ??
+      ScrollbarTheme.of(context).thickness?.resolve(const <WidgetState>{}) ??
+      _kDefaultScrollbarThickness;
+
   @override
   Widget build(BuildContext context) {
     if (widget.lineCount == 0) {
@@ -236,6 +272,10 @@ class _FixedLineViewState extends State<FixedLineView> {
         itemCount: widget.lineCount,
         itemExtent: widget.itemExtent,
         physics: _effectivePhysics,
+        // Reserve the scrollbar lane on the trailing edge so rows and tap
+        // targets stay clear of the ambient thumb. The bar itself stays
+        // with the ambient ScrollBehavior, which paints into this strip.
+        padding: EdgeInsetsDirectional.only(end: _resolveScrollbarGutter()),
         itemBuilder: widget.lineBuilder,
       ),
     );

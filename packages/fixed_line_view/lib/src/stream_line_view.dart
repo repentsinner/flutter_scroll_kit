@@ -25,6 +25,7 @@ class StreamLineView<T> extends StatefulWidget {
     this.selectable = false,
     this.selectionColor,
     this.lineSnap = false,
+    this.scrollbarGutter,
   });
 
   /// Stream of individual items to append.
@@ -62,6 +63,11 @@ class StreamLineView<T> extends StatefulWidget {
 
   /// Whether to quantize scroll offsets to line boundaries.
   final bool lineSnap;
+
+  /// Trailing scrollbar gutter forwarded to [FixedLineView].
+  ///
+  /// See [FixedLineView.scrollbarGutter].
+  final double? scrollbarGutter;
 
   @override
   State<StreamLineView<T>> createState() => _StreamLineViewState<T>();
@@ -117,6 +123,7 @@ class _StreamLineViewState<T> extends State<StreamLineView<T>> {
       selectable: widget.selectable,
       selectionColor: widget.selectionColor,
       lineSnap: widget.lineSnap,
+      scrollbarGutter: widget.scrollbarGutter,
       lineBuilder: (context, index) =>
           widget.itemBuilder(context, _items[index], index),
     );
