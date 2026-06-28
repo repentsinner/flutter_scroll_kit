@@ -245,4 +245,171 @@ void main() {
       await tester.pumpAndSettle();
     });
   });
+
+  group('bottom-alignment invariant', () {
+    testWidgets('holds after drag+settle on non-divisible viewport', (
+      WidgetTester tester,
+    ) async {
+      // 150 / 20 = 7.5 -> viewport is not an integer multiple of itemExtent.
+      final controller = await _pumpSizedList(
+        tester,
+        itemExtent: 20.0,
+        viewportHeight: 150.0,
+      );
+      expect(controller.position.viewportDimension, 150.0);
+
+      final gesture = await tester.startGesture(const Offset(200, 75));
+      await gesture.moveBy(const Offset(0, -57)); // arbitrary, off-boundary
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      _expectBottomAligned(controller);
+    });
+
+    testWidgets('holds after fling+settle on non-divisible viewport', (
+      WidgetTester tester,
+    ) async {
+      final controller = await _pumpSizedList(
+        tester,
+        itemExtent: 20.0,
+        viewportHeight: 150.0,
+      );
+
+      await tester.fling(find.byType(ListView), const Offset(0, -300), 1500);
+      await tester.pumpAndSettle();
+
+      _expectBottomAligned(controller);
+    });
+
+    // Snap math across extent/viewport combinations, including
+    // non-divisible viewports. One widget per combo so each gets a fresh
+    // layout (viewportDimension established before the first jump). Jump
+    // targets are away from the min/max clamp boundaries, where the snap
+    // formula governs the result directly.
+    const extents = [16.0, 20.0, 24.0];
+    const viewports = [100.0, 150.0, 137.0];
+    for (final extent in extents) {
+      for (final viewport in viewports) {
+        testWidgets('invariant holds after jumps '
+            '(extent $extent, viewport $viewport)', (
+          WidgetTester tester,
+        ) async {
+          final controller = await _pumpSizedList(
+            tester,
+            itemExtent: extent,
+            viewportHeight: viewport,
+          );
+
+          for (final target in [extent / 2 + 1, extent * 3 + 5, extent + 7]) {
+            controller.jumpTo(target);
+            await tester.pump();
+            _expectBottomAligned(controller);
+          }
+        });
+      }
+    }
+
+    testWidgets('clamps to minScrollExtent on negative-direction input', (
+      WidgetTester tester,
+    ) async {
+      // Snap math at the zero/negative boundary. The formula's nearest
+      // aligned target may be negative; the ListView clamps it to
+      // minScrollExtent (0). Offset never goes below 0 and stays >= 0
+      // under a negative-direction drag.
+      final controller = await _pumpSizedList(
+        tester,
+        itemExtent: 20.0,
+        viewportHeight: 150.0,
+      );
+
+      controller.jumpTo(0.0);
+      await tester.pump();
+      final atTop = controller.offset;
+      expect(atTop, greaterThanOrEqualTo(0.0));
+      expect(atTop, lessThan(20.0));
+
+      // Drag downward (toward negative offset): offset stays clamped.
+      final gesture = await tester.startGesture(const Offset(200, 75));
+      await gesture.moveBy(const Offset(0, 13));
+      await tester.pump();
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(controller.offset, greaterThanOrEqualTo(0.0));
+      expect(controller.offset, lessThan(20.0));
+    });
+  });
+
+  group('itemExtent guard', () {
+    test('LineSnapScrollController rejects zero extent', () {
+      expect(
+        () => LineSnapScrollController(itemExtent: 0),
+        throwsAssertionError,
+      );
+    });
+
+    test('LineSnapScrollController rejects negative extent', () {
+      expect(
+        () => LineSnapScrollController(itemExtent: -10),
+        throwsAssertionError,
+      );
+    });
+
+    test('LineSnapScrollPhysics rejects zero extent', () {
+      expect(() => LineSnapScrollPhysics(itemExtent: 0), throwsAssertionError);
+    });
+
+    test('LineSnapScrollPhysics rejects negative extent', () {
+      expect(
+        () => LineSnapScrollPhysics(itemExtent: -10),
+        throwsAssertionError,
+      );
+    });
+  });
+}
+
+/// Pumps a fixed-height [ListView] so [ScrollMetrics.viewportDimension] is
+/// known and may be non-divisible by [itemExtent].
+Future<LineSnapScrollController> _pumpSizedList(
+  WidgetTester tester, {
+  required double itemExtent,
+  required double viewportHeight,
+}) async {
+  final controller = LineSnapScrollController(itemExtent: itemExtent);
+  addTearDown(controller.dispose);
+
+  await tester.pumpWidget(
+    Directionality(
+      textDirection: TextDirection.ltr,
+      child: Center(
+        child: SizedBox(
+          height: viewportHeight,
+          child: ListView.builder(
+            controller: controller,
+            physics: LineSnapScrollPhysics(itemExtent: itemExtent),
+            itemExtent: itemExtent,
+            itemCount: 500,
+            itemBuilder: (context, index) =>
+                SizedBox(height: itemExtent, child: Text('Line $index')),
+          ),
+        ),
+      ),
+    ),
+  );
+  return controller;
+}
+
+/// Asserts the bottom-alignment invariant (SPEC §5):
+/// `(offset + viewportDimension) mod itemExtent == 0`.
+void _expectBottomAligned(LineSnapScrollController controller) {
+  final extent = controller.itemExtent;
+  final viewport = controller.position.viewportDimension;
+  final remainder = (controller.offset + viewport) % extent;
+  expect(
+    remainder < 0.01 || (extent - remainder) < 0.01,
+    isTrue,
+    reason:
+        'offset ${controller.offset} + viewport $viewport should align to '
+        'itemExtent $extent (remainder $remainder)',
+  );
 }
