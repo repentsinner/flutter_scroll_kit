@@ -23,6 +23,7 @@ Widget _buildTestWidget({
   double itemExtent = 20.0,
   ScrollController? controller,
   int maxStickyHeaders = 5,
+  Decoration? stickyDecoration,
 }) {
   return MaterialApp(
     home: Scaffold(
@@ -40,6 +41,9 @@ Widget _buildTestWidget({
           },
           config: StickyScrollConfig<_TestItem>(
             maxStickyHeaders: maxStickyHeaders,
+            stickyDecoration:
+                stickyDecoration ??
+                const BoxDecoration(color: Color(0xFF1E1E1E)),
             stickyHeaderBuilder: (context, candidate) {
               return Align(
                 alignment: Alignment.centerLeft,
@@ -553,29 +557,10 @@ void main() {
       addTearDown(controller.dispose);
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SizedBox(
-              height: 200,
-              width: 300,
-              child: StickyHierarchicalScrollView<_TestItem>(
-                items: testItems,
-                getLevel: (item) => item.level,
-                isSection: (item) => item.isSection,
-                itemExtent: 20.0,
-                controller: controller,
-                itemBuilder: (context, item, index) =>
-                    Text(item.name, key: ValueKey('item_$index')),
-                config: StickyScrollConfig<_TestItem>(
-                  stickyDecoration: distinctive,
-                  stickyHeaderBuilder: (context, candidate) => Text(
-                    candidate.data.name,
-                    key: ValueKey('sticky_${candidate.originalIndex}'),
-                  ),
-                ),
-              ),
-            ),
-          ),
+        _buildTestWidget(
+          items: testItems,
+          controller: controller,
+          stickyDecoration: distinctive,
         ),
       );
       await tester.pump();
