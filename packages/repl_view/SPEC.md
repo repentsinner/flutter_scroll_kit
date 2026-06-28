@@ -187,28 +187,17 @@ enforced by assertion.
 
 ## 8. Scrollbar Gutter §spec:repl-scrollbar-gutter
 
-*Status: not started*
+*Status: complete*
 
-Implements §req:problem-statement: a REPL consumer gets the kit's
-trailing-edge correctness without re-padding.
-
-`ReplView` exposes `scrollbarGutter` (`double?`) and forwards it to the
-`StickyHierarchicalScrollView` it wraps (§spec:shs-scrollbar-gutter),
-which reserves the trailing gutter for both scrollback rows and the
-pinned sticky input header — `entryBuilder` renders both, so one
-reservation covers both. Trailing-item slots (prompt line, status bar,
-live output) sit inside the same reserved lane, so a trailing affordance
-on an input row or a pinned header stays clear of the scrollbar. The
-parameter carries the shs contract unchanged: `null` (default)
-auto-derives from the theme scrollbar thickness, `0` disables for
-full-bleed, a positive value sets the width.
+`ReplView` exposes `scrollbarGutter` (`double?`) and forwards it verbatim
+to the wrapped `StickyHierarchicalScrollView` (§spec:shs-scrollbar-gutter),
+which owns the contract and the reservation.
 
 Why forward rather than re-implement: `repl_view` owns no scrollbar or
 list of its own — it composes the sticky view, which already reserves the
-gutter. Re-padding rows here would double the inset and still miss the
-pinned header. Exposing the parameter (rather than relying solely on the
-sticky view's default) keeps one uniform rule across the kit's three
-scrolling widgets and lets a REPL consumer opt out with `0`.
+gutter for both scrollback rows and the pinned sticky input header
+(`entryBuilder` renders both). Re-padding rows here would double the inset
+and still miss the pinned header.
 
 Why it matters for a REPL: an input header pins over the scroll lane, so
 its trailing controls would otherwise collide with the scrollbar exactly

@@ -72,6 +72,15 @@ class ReplView<T extends ConsoleEntry> extends StatefulWidget {
   /// trailing range.
   final Widget Function(BuildContext context, int index)? trailingItemBuilder;
 
+  /// Trailing gutter width reserved for the scrollbar lane, forwarded
+  /// verbatim to the wrapped [StickyHierarchicalScrollView]. `null`
+  /// (default) auto-derives from the theme scrollbar thickness, `0`
+  /// disables the gutter for full-bleed, a positive value sets the width.
+  /// The sticky view reserves the gutter for both scrollback rows and the
+  /// pinned input header, so trailing affordances stay clear of the
+  /// scrollbar.
+  final double? scrollbarGutter;
+
   const ReplView({
     super.key,
     required this.entries,
@@ -83,6 +92,7 @@ class ReplView<T extends ConsoleEntry> extends StatefulWidget {
     this.physics,
     this.trailingItemCount = 0,
     this.trailingItemBuilder,
+    this.scrollbarGutter,
   }) : assert(
          trailingItemCount == 0 || trailingItemBuilder != null,
          'trailingItemBuilder must be provided when trailingItemCount > 0',
@@ -286,6 +296,7 @@ class _ReplViewState<T extends ConsoleEntry> extends State<ReplView<T>> {
         physics: widget.physics,
         trailingItemCount: widget.trailingItemCount,
         trailingItemBuilder: widget.trailingItemBuilder,
+        scrollbarGutter: widget.scrollbarGutter,
         itemBuilder: (context, entry, _) => widget.entryBuilder(context, entry),
         config: StickyScrollConfig<T>(
           maxStickyHeaders: widget.maxStickyHeaders,

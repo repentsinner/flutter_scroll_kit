@@ -34,19 +34,3 @@ dependency graph — base packages first.
   the viewport top pins its `entryBuilder` widget at the viewport top),
   the empty-entries render path, and internal-controller disposal.
   Depends on `shs-trailing-key-tests` for the pinning harness.
-
-## Reserve scrollbar gutters across scrolling primitives
-
-The scrolling primitives reserve no space for the scrollbar, so trailing
-content and tap targets render under the scroll lane — on desktop the
-overlay scrollbar also steals their pointer events. Reported in #31 for
-`sticky_hierarchical_scroll`; the gap is repo-wide. Each package's SPEC
-gains a `Scrollbar Gutter` section. Ordered by the dependency graph — the
-sticky base package first, its consumers next.
-
-- **repl-scrollbar-gutter**: add a `scrollbarGutter` parameter to
-  `ReplView` and forward it to the wrapped `StickyHierarchicalScrollView`
-  (`repl_view.dart`); see §spec:repl-scrollbar-gutter. **Verify:** with
-  the scrollbar shown, a trailing affordance on a pinned input header and
-  on a scrollback row both fire, and `scrollbarGutter: 0` restores
-  full-bleed.
