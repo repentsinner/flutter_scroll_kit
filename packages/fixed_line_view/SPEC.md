@@ -200,29 +200,22 @@ final class FixedLineViewController {
 
 ## 9. Scrollbar Gutter §spec:flv-scrollbar-gutter
 
-*Status: not started*
+*Status: complete*
 
-Implements §req:problem-statement: the primitive owns its own correct
-layout so line content stays clear of the scroll lane without
-per-consumer padding.
+`FixedLineView` reserves a trailing `scrollbarGutter` so line content and
+trailing tap targets render clear of the scroll lane. `StreamLineView`
+forwards the parameter to the `FixedLineView` it wraps, so both views
+share one rule.
 
-`FixedLineView` reserves a trailing gutter on the scrollbar edge so line
-content and trailing tap targets render clear of the lane. Without it the
-bare `ListView.builder` runs full-width and the ambient desktop
-`ScrollBehavior` scrollbar paints over the trailing edge — text is
-clipped under the thumb and pointer events in that strip hit the
-scrollbar. `StreamLineView` forwards the parameter to the `FixedLineView`
-it wraps, so both views share one rule.
-
-`scrollbarGutter` carries the same contract as
-§spec:shs-scrollbar-gutter — `double?`, `null` (default) auto-derives
-from the effective `ScrollbarThemeData.thickness` with the Material
-default as fallback, `0` disables the gutter for full-bleed content, a
-positive value reserves exactly that width — and the same **static,
-uniform** reservation (present in every layout state on every platform,
-not gated on thumb visibility or platform). A consumer setting the gutter
+`scrollbarGutter` inherits the §spec:shs-scrollbar-gutter contract
+verbatim: `double?`, `null` (default) auto-derives from the effective
+`ScrollbarThemeData.thickness` with the Material default as fallback, `0`
+disables the gutter, a positive value reserves exactly that width — a
+**static, uniform** reservation present in every layout state on every
+platform, not gated on thumb visibility. A consumer that sets the gutter
 on a `FixedLineView` and a `StickyHierarchicalScrollView` meets one
-trailing-edge rule, not two.
+trailing-edge rule, not two, because both derive the width from the same
+theme.
 
 Unlike the sticky view, `FixedLineView` does not render its own
 `Scrollbar` — it reserves the gutter as a trailing `ListView` padding
@@ -233,14 +226,14 @@ into the reserved strip. Two reasons:
   `StickyHierarchicalScrollView` share one `ScrollController`, and the
   sticky view already owns a `Scrollbar`. A second `Scrollbar` in the
   line view would paint two bars over the same scroll position.
-- *Minimal chrome:* the line view deliberately delegates scrollbar
-  rendering to the ambient behavior; reserving a padding inset adds the
-  gutter without taking ownership of the bar.
+- *Minimal chrome:* the line view delegates scrollbar rendering to the
+  ambient behavior; a padding inset adds the gutter without taking
+  ownership of the bar.
 
 Rejected — owning a `Scrollbar` to mirror the sticky view: gains
 self-contained bar/gutter alignment but reintroduces the double-bar
-composition hazard, so the alignment is instead guaranteed by both
-widgets deriving the width from the same `ScrollbarThemeData`.
+composition hazard. Alignment is instead guaranteed by both widgets
+deriving the width from the same `ScrollbarThemeData`.
 
 Tradeoff accepted: every consumer loses the gutter width of horizontal
 space, including platforms where the scrollbar never intercepts input;
