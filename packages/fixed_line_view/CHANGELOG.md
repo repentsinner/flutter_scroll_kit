@@ -5,6 +5,13 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4](https://github.com/repentsinner/flutter_scroll_kit/compare/fixed_line_view-v0.1.3...fixed_line_view-v0.1.4) (2026-06-28)
+
+
+### Features
+
+* batch — flv-scrollbar-gutter (reserve scrollbar gutter) ([#39](https://github.com/repentsinner/flutter_scroll_kit/issues/39)) ([29fc1ff](https://github.com/repentsinner/flutter_scroll_kit/commit/29fc1ffa1b0dc850fd2c8cdf81c798b9a1640351))
+
 ## [0.1.3](https://github.com/repentsinner/flutter_scroll_kit/compare/fixed_line_view-v0.1.2...fixed_line_view-v0.1.3) (2026-06-25)
 
 
