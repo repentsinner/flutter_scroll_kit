@@ -44,7 +44,9 @@ overlay scrollbar also steals their pointer events. Reported in #31 for
 gains a `Scrollbar Gutter` section. Ordered by the dependency graph — the
 sticky base package first, its consumers next.
 
-- **repl-scrollbar-gutter**: forward the sticky view's gutter through
-  `ReplView` to scrollback rows, the pinned input header, and trailing
-  slots. **Verify:** a trailing affordance on a pinned input header is
-  tappable with the scrollbar shown. Depends on shs-scrollbar-gutter.
+- **repl-scrollbar-gutter**: add a `scrollbarGutter` parameter to
+  `ReplView` and forward it to the wrapped `StickyHierarchicalScrollView`
+  (`repl_view.dart`); see §spec:repl-scrollbar-gutter. **Verify:** with
+  the scrollbar shown, a trailing affordance on a pinned input header and
+  on a scrollback row both fire, and `scrollbarGutter: 0` restores
+  full-bleed.
