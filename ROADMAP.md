@@ -44,11 +44,15 @@ overlay scrollbar also steals their pointer events. Reported in #31 for
 gains a `Scrollbar Gutter` section. Ordered by the dependency graph — the
 sticky base package first, its consumers next.
 
-- **flv-scrollbar-gutter**: reserve the same trailing gutter in
-  `FixedLineView` / `StreamLineView` when a scrollbar is shown over the
-  list. **Verify:** under an ambient desktop scrollbar, a trailing tap
-  target on a line fires and trailing text clears the track. Depends on
-  shs-scrollbar-gutter for the shared gutter contract.
+- **flv-scrollbar-gutter**: add a `scrollbarGutter` parameter to
+  `FixedLineView` (forwarded from `StreamLineView`) and inset the
+  `ListView` padding by it on the trailing edge, defaulting to the
+  theme-derived scrollbar thickness — no `Scrollbar` of its own
+  (`fixed_line_view.dart`, `stream_line_view.dart`); see
+  §spec:flv-scrollbar-gutter. **Verify:** under an ambient desktop
+  scrollbar, a trailing tap target on a `FixedLineView` line fires on
+  click, trailing text clears the track, and `scrollbarGutter: 0`
+  restores full-bleed.
 - **repl-scrollbar-gutter**: forward the sticky view's gutter through
   `ReplView` to scrollback rows, the pinned input header, and trailing
   slots. **Verify:** a trailing affordance on a pinned input header is
