@@ -226,10 +226,12 @@ Unit tests cover:
   - Drag back to bottom → stuck.
   - Anchor entry removed → snap to bottom, re-enter stuck.
 - Trailing rows render after `entries`.
-
-Sticky input pinning (an input scrolled above the viewport top pins
-its `entryBuilder` widget), the empty-entries render path, and
-internal-controller disposal remain uncovered (see ROADMAP
-`repl-pinning-tests`).
+- Sticky input pinning: an input scrolled above the viewport top pins
+  its `entryBuilder` widget at the viewport top via the sticky overlay.
+- Empty-entries render path: an empty `entries` list builds the sticky
+  view without error, including via the internal controller.
+- Controller disposal: the internal controller is disposed on unmount;
+  a consumer-supplied controller is not. Swapping from internal to
+  external releases the internal controller.
 
 Tests run on the Flutter widget test runner.

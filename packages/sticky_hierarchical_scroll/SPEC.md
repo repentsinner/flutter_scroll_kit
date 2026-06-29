@@ -283,12 +283,22 @@ Unit tests cover:
   never negative.
 - Binary-search activation: the strict-less-than boundary returns the
   correct active subset across scroll positions.
+- Binary-search parity: in variable-height mode the binary search over
+  candidate `startPosition` equals a linear scan for every threshold
+  swept across the full offset domain, including each candidate
+  boundary.
 - An external `ScrollController` drives the overlay.
-
-Internal-controller disposal, variable-height binary-search parity
-against a linear scan over the full offset domain, the
-`onStickyHeaderTap` navigation callback, trailing-item key stability,
-and `stickyDecoration` application remain uncovered (see ROADMAP
-`shs-trailing-key-tests`).
+- Controller ownership: the internal controller is created and disposed
+  without error; an external controller is never disposed by the widget
+  and stays usable after the widget unmounts.
+- Navigation callback: with `enableNavigation` true, tapping a pinned
+  header fires `onStickyHeaderTap` with the candidate's `originalIndex`
+  and leaves the scroll offset unchanged; with `enableNavigation` false
+  the tap is a no-op.
+- Trailing-item key stability: prepending a data item shifts trailing
+  indices yet a trailing widget retains its element identity (a focused
+  `TextField` keeps focus) via the negative-key `findChildIndexCallback`.
+- Decoration: the pinned header renders inside a `DecoratedBox` carrying
+  the configured `stickyDecoration`.
 
 Tests run on the Flutter widget test runner.
