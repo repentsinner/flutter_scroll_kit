@@ -144,12 +144,16 @@ Unit tests cover:
   settling rounds to the nearest boundary.
 - `ScrollMode.pixel` scrolls without snapping; `applyTo` preserves
   `itemExtent` and mode.
-
-Tests exercise a single item extent and viewport at non-negative
-offsets. The bottom-alignment invariant across extent/viewport
-combinations, snap math at negative and zero offsets, and the
-`assert(itemExtent > 0)` guard remain uncovered (see ROADMAP
-`lssp-snap-invariant-tests`).
+- Bottom-alignment invariant `(offset + viewportDimension) mod
+  itemExtent == 0` holds across extent/viewport combinations, including
+  non-divisible viewports (e.g. itemExtent 20, viewport 150), after
+  drag, fling, and `jumpTo` away from the scroll boundaries.
+- Snap math at the zero/negative boundary: the formula's nearest
+  aligned target may be negative; the scroll view clamps it to
+  `minScrollExtent`, so offset never goes below 0 under negative-
+  direction input.
+- The `assert(itemExtent > 0)` guard rejects zero and negative extents
+  for both `LineSnapScrollController` and `LineSnapScrollPhysics`.
 
 Tests run on the Flutter test runner because the classes extend Flutter
 scroll primitives. No platform channels required.

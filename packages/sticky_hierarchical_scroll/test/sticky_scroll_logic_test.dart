@@ -222,6 +222,112 @@ void main() {
     });
   });
 
+  group('Binary-search parity over the full offset domain', () {
+    // Variable heights: each candidate carries explicit cumulative
+    // offsets. The widget's binary search keys on startPosition; a
+    // linear scan over every candidate must produce the same subset
+    // for every threshold across the entire offset range.
+    //
+    // Heights below are deliberately irregular so uniform arithmetic
+    // (index * extent) would give wrong positions — only the cumulative
+    // offsets are correct.
+    final heights = <double>[30, 20, 20, 45, 20, 20, 18, 60, 20, 20, 20, 20];
+    final sectionFlags = <bool>[
+      true, false, false, // Section A + leaves
+      true, false, false, false, // Section B + leaves
+      true, false, false, false, false, // Section C + leaves
+    ];
+    final levels = <int>[0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1];
+
+    // Cumulative offset table: offsets[i] is the top edge of item i.
+    final offsets = <double>[0.0];
+    for (final h in heights) {
+      offsets.add(offsets.last + h);
+    }
+    final totalExtent = offsets.last;
+
+    /// Build variable-height candidates from the offset table, mirroring
+    /// _StickyHierarchicalScrollViewState._updateStickyModel.
+    List<StickyCandidate<String>> buildVariableCandidates() {
+      final candidates = <StickyCandidate<String>>[];
+      final itemCount = sectionFlags.length;
+      for (int i = 0; i < itemCount; i++) {
+        if (!sectionFlags[i]) continue;
+        final level = levels[i];
+        int endIndex = itemCount - 1;
+        for (int j = i + 1; j < itemCount; j++) {
+          if (sectionFlags[j] && levels[j] <= level) {
+            endIndex = j - 1;
+            break;
+          }
+        }
+        candidates.add(
+          StickyCandidate<String>(
+            level: level,
+            data: 'item $i',
+            originalIndex: i,
+            endIndex: endIndex,
+            itemExtent: heights[i],
+            startOffset: offsets[i],
+            scopeEndOffset: offsets[endIndex + 1],
+          ),
+        );
+      }
+      return candidates;
+    }
+
+    /// Reference implementation: linear scan over all candidates.
+    List<StickyCandidate<String>> linearScanIntersecting(
+      List<StickyCandidate<String>> candidates,
+      double threshold,
+    ) {
+      return candidates.where((c) => c.startPosition < threshold).toList();
+    }
+
+    test('binary search equals linear scan at every 0.5px threshold', () {
+      final candidates = buildVariableCandidates();
+      // Sweep the entire offset domain (plus a margin past the end) in
+      // fine steps so each candidate boundary is straddled on both sides.
+      for (double t = -5.0; t <= totalExtent + 5.0; t += 0.5) {
+        final binary = getCandidatesIntersecting(candidates, t);
+        final linear = linearScanIntersecting(candidates, t);
+        expect(
+          binary.map((c) => c.originalIndex).toList(),
+          linear.map((c) => c.originalIndex).toList(),
+          reason: 'mismatch at threshold $t',
+        );
+      }
+    });
+
+    test('binary search straddles each candidate boundary exactly', () {
+      final candidates = buildVariableCandidates();
+      for (final c in candidates) {
+        final pos = c.startPosition;
+        // Strict less-than: AT the boundary the candidate is excluded.
+        expect(
+          getCandidatesIntersecting(
+            candidates,
+            pos,
+          ).map((e) => e.originalIndex),
+          linearScanIntersecting(candidates, pos).map((e) => e.originalIndex),
+          reason: 'at boundary $pos',
+        );
+        // Just past the boundary it is included.
+        expect(
+          getCandidatesIntersecting(
+            candidates,
+            pos + 0.01,
+          ).map((e) => e.originalIndex),
+          linearScanIntersecting(
+            candidates,
+            pos + 0.01,
+          ).map((e) => e.originalIndex),
+          reason: 'just past boundary $pos',
+        );
+      }
+    });
+  });
+
   group('Push-out math', () {
     test('push-out offset when scope end enters sticky area', () {
       final candidates = buildCandidates(items);

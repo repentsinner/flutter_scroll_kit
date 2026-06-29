@@ -45,6 +45,7 @@ Widget _harness({
   int trailingItemCount = 0,
   Widget Function(BuildContext, int)? trailingItemBuilder,
   double itemExtent = 16.0,
+  int maxStickyHeaders = 1,
 }) {
   return MaterialApp(
     home: Scaffold(
@@ -54,6 +55,7 @@ Widget _harness({
           entries: entries,
           itemExtent: itemExtent,
           controller: controller,
+          maxStickyHeaders: maxStickyHeaders,
           trailingItemCount: trailingItemCount,
           trailingItemBuilder: trailingItemBuilder,
           entryBuilder: (context, entry) {
@@ -455,6 +457,139 @@ void main() {
         controller.position.pixels,
         closeTo(controller.position.maxScrollExtent, 0.5),
       );
+    });
+  });
+
+  group('ReplView sticky input pinning', () {
+    testWidgets('input scrolled above the top pins at the viewport top', (
+      tester,
+    ) async {
+      final controller = ScrollController();
+      // One input followed by many responses: scrolling down pushes the
+      // input row off the top while its scope (responses) stays visible.
+      final entries = _buildEntries(responseCount: 120);
+
+      await tester.pumpWidget(
+        _harness(entries: List.of(entries), controller: controller),
+      );
+      await tester.pumpAndSettle();
+
+      // Scroll far past the input row (row 0 at offset 0..16) so the
+      // normal row is virtualized out of the built range, leaving only
+      // the pinned header. itemExtent is 16, so jumping to 800 puts the
+      // input ~50 rows above the top.
+      controller.jumpTo(800);
+      await tester.pumpAndSettle();
+
+      // The input text still resolves to exactly one widget — the pinned
+      // header in the sticky overlay (the scroll row is out of range).
+      final inputFinder = find.text('cmd');
+      expect(inputFinder, findsOneWidget);
+
+      // The pinned header sits at the viewport top. The viewport's top is
+      // the top of the ReplView box.
+      final viewportTop = tester.getTopLeft(find.byType(ReplView<_Entry>)).dy;
+      final headerTop = tester.getTopLeft(inputFinder).dy;
+      expect(headerTop, closeTo(viewportTop, 0.5));
+    });
+  });
+
+  group('ReplView empty entries', () {
+    testWidgets('renders without error and builds the sticky view', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_harness(entries: const []));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(StickyHierarchicalScrollView<_Entry>), findsOneWidget);
+    });
+
+    testWidgets(
+      'empty list with the internal controller mounts and pumps cleanly',
+      (tester) async {
+        // No external controller: exercises the internal-controller path
+        // through _captureAnchor / _isAtBottom with no clients/entries.
+        await tester.pumpWidget(_harness(entries: const []));
+        await tester.pump();
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        expect(
+          find.byType(StickyHierarchicalScrollView<_Entry>),
+          findsOneWidget,
+        );
+      },
+    );
+  });
+
+  group('ReplView controller disposal', () {
+    testWidgets('disposes its internal controller without error on unmount', (
+      tester,
+    ) async {
+      // No controller supplied — ReplView owns _ownController.
+      await tester.pumpWidget(
+        _harness(entries: _buildEntries(responseCount: 10)),
+      );
+      await tester.pumpAndSettle();
+
+      // Unmount by pumping a different widget tree.
+      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('does not dispose a consumer-supplied controller', (
+      tester,
+    ) async {
+      final external = ScrollController();
+
+      await tester.pumpWidget(
+        _harness(
+          entries: _buildEntries(responseCount: 10),
+          controller: external,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Unmount ReplView.
+      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+      await tester.pumpAndSettle();
+
+      // The consumer still owns the controller: disposing it must not
+      // throw an "already disposed" error.
+      expect(external.dispose, returnsNormally);
+    });
+
+    testWidgets('releases the internal controller when one is later supplied', (
+      tester,
+    ) async {
+      // Start with no controller (ReplView owns _ownController).
+      await tester.pumpWidget(
+        _harness(entries: _buildEntries(responseCount: 10)),
+      );
+      await tester.pumpAndSettle();
+
+      // Supply an external controller: didUpdateWidget disposes
+      // _ownController and adopts the external one.
+      final external = ScrollController();
+      await tester.pumpWidget(
+        _harness(
+          entries: _buildEntries(responseCount: 10),
+          controller: external,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+
+      // Unmount; the external controller remains the consumer's to
+      // dispose.
+      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+      await tester.pumpAndSettle();
+      expect(external.dispose, returnsNormally);
     });
   });
 

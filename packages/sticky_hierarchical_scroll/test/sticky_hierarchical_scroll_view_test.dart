@@ -23,6 +23,7 @@ Widget _buildTestWidget({
   double itemExtent = 20.0,
   ScrollController? controller,
   int maxStickyHeaders = 5,
+  Decoration? stickyDecoration,
 }) {
   return MaterialApp(
     home: Scaffold(
@@ -40,6 +41,9 @@ Widget _buildTestWidget({
           },
           config: StickyScrollConfig<_TestItem>(
             maxStickyHeaders: maxStickyHeaders,
+            stickyDecoration:
+                stickyDecoration ??
+                const BoxDecoration(color: Color(0xFF1E1E1E)),
             stickyHeaderBuilder: (context, candidate) {
               return Align(
                 alignment: Alignment.centerLeft,
@@ -335,6 +339,244 @@ void main() {
       await tester.pump();
 
       expect(find.byKey(const ValueKey('sticky_3')), findsOneWidget);
+    });
+  });
+
+  group('Trailing-item key stability', () {
+    testWidgets(
+      'prepending a data item preserves trailing widget state (focus)',
+      (tester) async {
+        // Mutable item list so we can prepend and re-pump.
+        var items = <_TestItem>[
+          const _TestItem('Section A', 0, isSection: true),
+          for (int i = 1; i <= 10; i++) _TestItem('item $i', 1),
+        ];
+
+        final focusNode = FocusNode();
+        addTearDown(focusNode.dispose);
+
+        late StateSetter setOuter;
+        Widget build() {
+          return MaterialApp(
+            home: Scaffold(
+              body: StatefulBuilder(
+                builder: (context, setState) {
+                  setOuter = setState;
+                  return SizedBox(
+                    height: 400,
+                    width: 300,
+                    child: StickyHierarchicalScrollView<_TestItem>(
+                      items: items,
+                      getLevel: (item) => item.level,
+                      isSection: (item) => item.isSection,
+                      itemExtent: 20.0,
+                      trailingItemCount: 1,
+                      trailingItemBuilder: (context, index) => TextField(
+                        key: const ValueKey('trailing_field'),
+                        focusNode: focusNode,
+                      ),
+                      itemBuilder: (context, item, index) =>
+                          Text(item.name, key: ValueKey('item_$index')),
+                      config: StickyScrollConfig<_TestItem>(
+                        stickyHeaderBuilder: (context, candidate) =>
+                            Text(candidate.data.name),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          );
+        }
+
+        await tester.pumpWidget(build());
+        await tester.pump();
+
+        // Focus the trailing TextField.
+        await tester.tap(find.byKey(const ValueKey('trailing_field')));
+        await tester.pump();
+        expect(focusNode.hasFocus, isTrue);
+
+        // Prepend a data item — shifts every data index by one and so
+        // shifts the trailing element's positional index. Without the
+        // negative-key findChildIndexCallback the trailing element would
+        // be recreated and focus lost.
+        setOuter(() {
+          items = [const _TestItem('Section Z', 0, isSection: true), ...items];
+        });
+        await tester.pump();
+
+        expect(
+          focusNode.hasFocus,
+          isTrue,
+          reason:
+              'trailing TextField must retain focus across the index shift; '
+              'findChildIndexCallback keys it by ValueKey<int>(-(i+1))',
+        );
+      },
+    );
+  });
+
+  group('Internal/external controller disposal', () {
+    testWidgets('internal controller created and disposed without error', (
+      tester,
+    ) async {
+      // No controller passed -> the widget owns one.
+      await tester.pumpWidget(_buildTestWidget(items: testItems));
+      await tester.pump();
+
+      // Remove the widget to trigger dispose(). A leaked or
+      // double-disposed internal controller surfaces as a test error.
+      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+      await tester.pump();
+
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('external controller is NOT disposed by the widget', (
+      tester,
+    ) async {
+      final external = ScrollController();
+
+      await tester.pumpWidget(
+        _buildTestWidget(items: testItems, controller: external),
+      );
+      await tester.pump();
+
+      // Remove the widget. It must not dispose a controller it does
+      // not own.
+      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+      await tester.pump();
+
+      // If the widget had disposed it, this second dispose would throw
+      // "A ScrollController was used after being disposed".
+      expect(external.dispose, returnsNormally);
+    });
+  });
+
+  group('onStickyHeaderTap navigation callback', () {
+    Widget buildNavHarness({
+      required ScrollController controller,
+      required bool enableNavigation,
+      void Function(int)? onTap,
+    }) {
+      return MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            height: 200,
+            width: 300,
+            child: StickyHierarchicalScrollView<_TestItem>(
+              items: testItems,
+              getLevel: (item) => item.level,
+              isSection: (item) => item.isSection,
+              itemExtent: 20.0,
+              controller: controller,
+              onStickyHeaderTap: onTap,
+              itemBuilder: (context, item, index) =>
+                  Text(item.name, key: ValueKey('item_$index')),
+              config: StickyScrollConfig<_TestItem>(
+                enableNavigation: enableNavigation,
+                stickyHeaderBuilder: (context, candidate) => Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    candidate.data.name,
+                    key: ValueKey('sticky_${candidate.originalIndex}'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    testWidgets('tapping a pinned header fires callback with originalIndex; '
+        'scroll position unchanged', (tester) async {
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+      int? tapped;
+
+      await tester.pumpWidget(
+        buildNavHarness(
+          controller: controller,
+          enableNavigation: true,
+          onTap: (index) => tapped = index,
+        ),
+      );
+      await tester.pump();
+
+      // Scroll so Section A (index 0) pins.
+      controller.jumpTo(80.0);
+      await tester.pump();
+      expect(find.byKey(const ValueKey('sticky_0')), findsOneWidget);
+
+      final before = controller.offset;
+      await tester.tap(find.byKey(const ValueKey('sticky_0')));
+      await tester.pump();
+
+      expect(tapped, 0);
+      // Package does not scroll itself when a callback is supplied.
+      expect(controller.offset, before);
+    });
+
+    testWidgets('enableNavigation false makes the header tap a no-op', (
+      tester,
+    ) async {
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+      var fired = false;
+
+      await tester.pumpWidget(
+        buildNavHarness(
+          controller: controller,
+          enableNavigation: false,
+          onTap: (_) => fired = true,
+        ),
+      );
+      await tester.pump();
+
+      controller.jumpTo(80.0);
+      await tester.pump();
+      expect(find.byKey(const ValueKey('sticky_0')), findsOneWidget);
+
+      final before = controller.offset;
+      await tester.tap(find.byKey(const ValueKey('sticky_0')));
+      await tester.pump();
+
+      // GestureDetector.onTap is null -> callback never fires, no scroll.
+      expect(fired, isFalse);
+      expect(controller.offset, before);
+    });
+  });
+
+  group('stickyDecoration application', () {
+    testWidgets('pinned header is wrapped in a DecoratedBox carrying the '
+        'configured decoration', (tester) async {
+      const distinctive = BoxDecoration(color: Color(0xFF123456));
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        _buildTestWidget(
+          items: testItems,
+          controller: controller,
+          stickyDecoration: distinctive,
+        ),
+      );
+      await tester.pump();
+
+      // Scroll past Section A only (Sub B at 60 not yet passed), so a
+      // single header pins and exactly one DecoratedBox carries the
+      // configured decoration.
+      controller.jumpTo(40.0);
+      await tester.pump();
+      expect(find.byKey(const ValueKey('sticky_0')), findsOneWidget);
+      expect(find.byKey(const ValueKey('sticky_3')), findsNothing);
+
+      final decorated = find.byWidgetPredicate(
+        (w) => w is DecoratedBox && w.decoration == distinctive,
+      );
+      expect(decorated, findsOneWidget);
     });
   });
 
