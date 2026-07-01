@@ -12,14 +12,13 @@ pixel update during drag, fling, and programmatic scroll, plus a
 *Status: complete*
 
 Terminal- and console-style views need pixel-aligned lines: every frame
-shall render whole lines only, never fractional positions. Flutter's
-built-in `FixedExtentScrollPhysics` implements the snap-to-item-boundary
-ballistics correctly, but is coupled to `FixedExtentScrollController`
-and therefore restricted to `ListWheelScrollView`. General-purpose
-`ListView`, `CustomScrollView`, and their sliver equivalents have no
-supported way to get line-snapping physics. See
+renders whole lines, never fractional positions. Flutter's
+`FixedExtentScrollPhysics` does the same snap math but is gated to
+`FixedExtentScrollController`, so only `ListWheelScrollView` gets it.
+General-purpose `ListView`, `CustomScrollView`, and their sliver
+equivalents have no supported way to get line-snapping physics. See
 [flutter/flutter#41472](https://github.com/flutter/flutter/issues/41472)
-(open since 2019, P3) requesting this capability in the framework.
+(open since 2019, P3).
 
 ---
 
@@ -50,11 +49,10 @@ Pure Flutter. No project-specific code.
   framework issue flutter/flutter#41472 tracks the gap.
 - **`PageScrollPhysics`** (Flutter framework): snaps at viewport
   granularity, not line granularity. Wrong unit.
-- **pub.dev**: no general-purpose snap-to-line physics exists at the
-  time of extraction.
+- **pub.dev**: no general-purpose snap-to-line physics.
 
-Extracting the ~40 lines of snap math into a reusable package removes
-the framework restriction without blocking on an upstream fix.
+Extracting the snap math into a reusable package lifts the framework
+restriction with no upstream dependency.
 
 ---
 
@@ -64,7 +62,7 @@ the framework restriction without blocking on an upstream fix.
 
 ```dart
 enum ScrollMode {
-  line,   // snap to itemExtent boundaries after every scroll gesture
+  line,   // snap to itemExtent boundaries every frame
   pixel,  // platform-default smooth scrolling (no snapping)
 }
 
@@ -73,7 +71,7 @@ final class LineSnapScrollController extends ScrollController {
 
   LineSnapScrollController({
     required double itemExtent,
-    double? initialScrollOffset,
+    double initialScrollOffset = 0.0,
     bool keepScrollOffset = true,
     String? debugLabel,
   });

@@ -52,7 +52,7 @@ The rejected alternative was "keep every section whose start has been
 scrolled past." In nested hierarchies that approach fails: once both a
 parent and a child have scrolled off, both remain in the active set,
 and they get pushed out of the viewport simultaneously when their
-shared scope ends. Stale headers linger after their scope closes.
+shared scope ends.
 
 VS Code's `stickyScrollController` uses a **slot-fit test** instead: a
 candidate is active iff it fits an assigned pixel slot in the overlay
@@ -84,8 +84,8 @@ table is built so lookups are O(log n). O(n) per content change.
 candidates in depth-first order; for each candidate it computes a slot
 position (slot 0 at the overlay top, slot 1 at `slot0 + candidate[0]
 itemExtent`, etc.) and keeps the candidate iff its header has scrolled
-above its assigned slot *and* its scope end is still below that slot's
-bottom. The walk stops at `maxStickyHeaders`. The result is small
+above its assigned slot *and* its scope end is still at or below that
+slot's top. The walk stops at `maxStickyHeaders`. The result is small
 (≤ max) and sorted by depth.
 
 **Last-line offset**: the bottom-most active header receives a negative
@@ -123,11 +123,9 @@ construction fills both.
 *Status: complete*
 
 Sticky headers render as an overlay stacked above the list (via a
-`Stack`), not a column above it. The column approach causes a
-doubled-header artifact as a header transitions from scrolling to
-sticky — it would be painted twice during the handoff frame. The
-overlay approach hides the row behind the overlay when it enters its
-slot, so there is no duplicate.
+`Stack`), not a column above it. A column would paint the transitioning
+header twice during the handoff frame. The overlay hides the row behind
+it on entry — no duplicate.
 
 The overlay's decoration is `StickyScrollConfig.stickyDecoration`
 (defaults to VS Code's dark background). Consumers styling against a
@@ -140,10 +138,12 @@ different theme pass their own decoration.
 *Status: complete*
 
 Tapping a sticky header is optional. When `StickyScrollConfig
-.enableNavigation` is true, `onStickyHeaderTap(index)` fires with the
-tapped candidate's `originalIndex`. The consumer decides what
-"navigate" means (scroll, open a pane, highlight). The package does
-not animate or jump the scroll position itself.
+.enableNavigation` is true and `onStickyHeaderTap` is supplied, it
+fires with the tapped candidate's `originalIndex` and the package
+leaves the scroll position alone — the consumer decides what "navigate"
+means (scroll, open a pane, highlight). With navigation enabled and no
+callback, the package falls back to animating the scroll to the tapped
+section.
 
 ---
 
@@ -152,10 +152,9 @@ not animate or jump the scroll position itself.
 *Status: complete*
 
 `trailingItemCount` plus `trailingItemBuilder` append rows after the
-hierarchical items. Trailing rows scroll with the list but are not
-candidates — they never become sticky. This exists for inline input
-areas, footers, or "load more" rows that belong at the bottom of the
-stream.
+hierarchical items. Trailing rows scroll with the list but never become
+sticky. Use them for inline input, footers, or "load more" rows at the
+bottom of the stream.
 
 ---
 
@@ -233,19 +232,15 @@ auto-derives from the effective `ScrollbarThemeData.thickness`, with the
 Material default as fallback; `0` disables the gutter for full-bleed
 content; a positive value reserves exactly that width.
 
-The gutter is **static and uniform** — present in every layout state on
-every platform, independent of whether the thumb is currently painted.
-Two decisions drive this:
+The gutter is **static and uniform** — reserved in every layout state on
+every platform, independent of whether the thumb is painted:
 
 - *Static, not visibility-gated.* The Material `Scrollbar` is transient
-  on most platforms (iOS, Android, macOS). Reserving only while the
-  thumb shows would reflow content on every scroll as the bar fades —
-  jitter. A static reservation keeps trailing content stable.
-- *Uniform, not platform-gated.* The thumb occludes the lane whenever it
-  appears, on transient-scrollbar platforms as much as persistent
-  desktop ones; desktop adds pointer interception on top. A
-  platform-gated default would leave the collision unsolved where it is
-  most common. One reservation covers both.
+  (iOS, Android, macOS). Reserving only while the thumb shows reflows
+  content on every fade. Static reservation stays stable.
+- *Uniform, not platform-gated.* The thumb occludes the lane wherever it
+  appears; desktop adds pointer interception on top. One reservation
+  covers both.
 
 Auto-deriving from the theme thickness (the same source the wrapping
 `Scrollbar` renders from) keeps the reservation tracking the configured

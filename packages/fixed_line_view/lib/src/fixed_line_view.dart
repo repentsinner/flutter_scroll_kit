@@ -71,10 +71,14 @@ class FixedLineView extends StatefulWidget {
 
   /// Whether to quantize scroll offsets to line boundaries.
   ///
-  /// When true, uses [LineSnapScrollController] so every frame renders
-  /// at an exact line boundary — no fractional line positions during
-  /// drag, fling, or programmatic scroll. Overrides [controller] and
-  /// [physics] with line-snapping variants.
+  /// When true, [LineSnapScrollPhysics] replaces [physics] so the offset
+  /// settles on an exact line boundary at the end of a fling. The
+  /// controller is line-snapping only when [FixedLineView] owns it: with
+  /// no [controller] passed, the widget creates a
+  /// [LineSnapScrollController] that quantizes every pixel update. A
+  /// supplied [controller] is used as-is — pass a
+  /// [LineSnapScrollController] to keep per-frame quantization while
+  /// composing.
   final bool lineSnap;
 
   /// Trailing gutter reserved for the scrollbar lane.

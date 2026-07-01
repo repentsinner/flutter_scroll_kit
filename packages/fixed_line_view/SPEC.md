@@ -54,17 +54,13 @@ line-snap mode.
 
 At extraction time:
 
-- **`xterm`** (234 likes): full terminal emulator — parses ANSI escape
-  sequences, manages a grid character buffer, handles cursor and
-  keyboard input. Orders of magnitude heavier than a scrollable list
-  of lines.
-- **General `ListView`/`CustomScrollView`** recipes: reimplement the
-  follow-new-content / stop-on-user-scroll / resume-on-return
-  behavior every time, usually with subtle bugs around fling inertia
-  and programmatic scroll.
+- **`xterm`**: a full terminal emulator (ANSI parsing, grid buffer,
+  cursor/keyboard) — far heavier than a scrollable line list.
+- **General `ListView`/`CustomScrollView`** recipes: reimplement
+  follow / suppress / resume each time, often with fling and
+  programmatic-scroll bugs.
 
-A thin wrapper is cheaper than either alternative and lets consumers
-keep their own rendering.
+A thin wrapper costs less and keeps consumer rendering.
 
 ---
 
@@ -103,8 +99,7 @@ viewport center.
 arrives, scroll to keep the bottom visible. The widget tracks a
 `userScrolledAway` flag: once the user manually scrolls above the
 bottom edge, auto-scroll suppresses until the user scrolls back to the
-bottom. This is the convention every well-behaved log viewer follows
-(Chrome DevTools, `tail -f`, VS Code Output panel).
+bottom. Standard log-viewer behavior.
 
 `AutoScrollBehavior.none` disables both. The viewer sits still and
 respects only explicit programmatic scroll.
@@ -115,16 +110,20 @@ respects only explicit programmatic scroll.
 
 *Status: complete*
 
-`lineSnap: true` engages `line_snap_scroll_physics`:
-`LineSnapScrollController` quantizes every pixel update, and
-`LineSnapScrollPhysics` targets line boundaries at the end of
-ballistic simulations. In this mode the widget supplies both the
-controller and the physics; any `controller` or `physics` passed in
-by the consumer are overridden.
+`lineSnap: true` engages `line_snap_scroll_physics`.
+`LineSnapScrollPhysics` always replaces the physics, targeting line
+boundaries at the end of ballistic simulations. The controller is
+line-snapping only when `FixedLineView` owns it: with no `controller`
+passed, the widget creates a `LineSnapScrollController` that quantizes
+every pixel update. A consumer-supplied `controller` is used as-is —
+swapping it would break the shared-controller composition contract
+(§spec:flv-composition), which hands the same instance to the sticky
+view. To keep per-frame quantization while composing, pass a
+`LineSnapScrollController`.
 
-Line snap is off by default because most consumers (log panels,
-source views) are happy with fractional-pixel scrolling. Console-like
-consumers enable it for visual parity with terminal scrollbars.
+Line snap is off by default: most consumers (log panels, source views)
+accept fractional-pixel scrolling. Console-like consumers enable it for
+visual parity with terminal scrollbars.
 
 ---
 
@@ -230,14 +229,10 @@ into the reserved strip. Two reasons:
   ambient behavior; a padding inset adds the gutter without taking
   ownership of the bar.
 
-Rejected — owning a `Scrollbar` to mirror the sticky view: gains
-self-contained bar/gutter alignment but reintroduces the double-bar
-composition hazard. Alignment is instead guaranteed by both widgets
-deriving the width from the same `ScrollbarThemeData`.
-
-Tradeoff accepted: every consumer loses the gutter width of horizontal
-space, including platforms where the scrollbar never intercepts input;
-full-bleed consumers opt out with `scrollbarGutter: 0`.
+Owning a `Scrollbar` here was rejected: it reintroduces the double-bar
+hazard, and shared `ScrollbarThemeData` already guarantees alignment.
+The gutter costs horizontal space on every platform; full-bleed
+consumers opt out with `scrollbarGutter: 0`.
 
 ---
 

@@ -28,7 +28,8 @@ Dev dependencies are limited to `flutter_lints` and `flutter_test`.
 
 *Status: complete*
 
-Implements §req:problem-statement. The graph is shaped by the
+Implements §req:problem-statement and §req:publication-integrity. The
+graph is shaped by the
 composability requirement: a consumer of one primitive does not pay
 for primitives they do not use.
 
@@ -40,19 +41,19 @@ sticky_hierarchical_scroll
 └── repl_view
 ```
 
-Publication order shall match topological order: the two
-dependency-free base packages (`line_snap_scroll_physics` and
-`sticky_hierarchical_scroll`) first and in parallel, their direct
-consumers (`fixed_line_view` and `repl_view`) next. Publishing an
-upstream package with a
-dependency on an unpublished package fails the pub.dev resolver, so
-order is load-bearing, not merely tidy.
+Publication order matches topological order: the two dependency-free
+base packages (`line_snap_scroll_physics` and
+`sticky_hierarchical_scroll`) first, their direct consumers
+(`fixed_line_view` and `repl_view`) next. Publishing a package whose
+dependency is not yet on pub.dev fails the resolver, so order is
+load-bearing.
 
 ## 3. Publication Model §spec:publication-model
 
 *Status: complete*
 
-Implements §req:success-criteria. Independent installation, adoption,
+Implements §req:success-criteria and §req:publication-integrity.
+Independent installation, adoption,
 and upgrade all depend on per-package publication with per-package
 versioning.
 
@@ -66,7 +67,7 @@ Packages version independently: a bug fix in `repl_view` does not
 bump `line_snap_scroll_physics`. Each package carries its own
 `CHANGELOG.md` tracking only its own history.
 
-`dart pub publish --dry-run` is the gate — each package shall be
+`dart pub publish --dry-run` is the gate — each package is
 independently publishable before any is published. Rationale: a
 partially-published dependency graph is harder to recover from than
 a failed dry-run on the first package.
@@ -117,7 +118,8 @@ BSD 3-Clause, matching upstream rove.
 
 *Status: complete*
 
-Implements §req:success-criteria. The publication mechanism avoids
+Implements §req:success-criteria and §req:publication-integrity. The
+publication mechanism avoids
 ambient credentials — long-lived tokens stored in repository secrets
 would be readable by every workflow in the repo and would broaden
 the blast radius of any compromise.
@@ -134,16 +136,16 @@ short-lived pub.dev credential, scoped to one publish. No
 long-lived credentials live in the repo or GitHub secrets. Reference:
 [dart.dev/tools/pub/automated-publishing](https://dart.dev/tools/pub/automated-publishing).
 
-Topological publication order is preserved across simultaneous
-releases. When release-please bumps multiple packages in one PR —
-most notably on initial publication — all tags land in a single push
-and all workflows trigger together. A dependent that publishes before
-its dependency is indexed on pub.dev fails resolver lookup. The
-workflow enforces ordering (the two dependency-free base packages
-before their direct consumers) without
-prescribing a specific mechanism. Subsequent releases rarely exercise
-this path; release-please only tags packages with version-bumping
-commits, so most releases touch one package in isolation.
+Simultaneous releases need care. When release-please bumps multiple
+packages in one PR — most notably on initial publication — all tags
+land in a single push and the per-package publish workflows trigger
+together. A shared `concurrency: pub-publish` group serializes them so
+they never publish in parallel, but does not sequence them
+topologically: a consumer can still run before its dependency is
+indexed and fail resolver lookup. Recovery is a manual re-publish via
+each workflow's `workflow_dispatch`. Subsequent releases rarely hit
+this; release-please only tags packages with version-bumping commits,
+so most releases touch one package in isolation.
 
 One-time human setup that cannot be automated precedes the first
 publication: each package is registered as a trusted publisher on its
