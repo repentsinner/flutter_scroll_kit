@@ -5,46 +5,11 @@ with a sticky overlay of ancestor section headers — a VS Code–style
 breadcrumb that stays visible while the user scrolls through deep
 structures.
 
----
-
-## 1. Problem Statement §spec:shs-problem-statement
-
-*Status: complete*
-
-Tree-shaped content (code outlines, nested G-code structure, folder
-trees) loses navigational context once the current section's header
-scrolls off the top of the viewport. The reader no longer knows which
-function, tool change, or folder they are inside. VS Code solves this
-with "Sticky Scroll": the currently-active ancestor chain pins to the
-top of the viewport as an overlay.
-
-No equivalent widget exists for Flutter. `flutter_sticky_header`
-(928 likes) and `sliver_tools` (1450 likes) provide single-level pinned
-headers — neither implements a hierarchical breadcrumb with scope-aware
-push-out.
+Implements §req:shs-problem, §req:shs-scope, and §req:shs-behavior.
 
 ---
 
-## 2. Scope §spec:shs-scope
-
-*Status: complete*
-
-The package provides the sticky-header scroll view only. The consumer
-owns:
-
-- Item shape and hierarchy semantics — callbacks extract level, detect
-  section starts, and build rows.
-- Header widget content — `stickyHeaderBuilder` returns the full widget
-  including any styling and indentation. The package supplies only the
-  overlay container (configurable `Decoration`).
-- Scroll controller — a consumer may pass an external `ScrollController`
-  for composition with other widgets that observe the same scroll.
-
-Generic over item type `T`. Pure Flutter. No project-specific code.
-
----
-
-## 3. Why Slot-Fit §spec:shs-why-slot-fit
+## 1. Why Slot-Fit §spec:shs-why-slot-fit
 
 *Status: complete*
 
@@ -66,7 +31,7 @@ Slot-fit also gives a bounded, predictable overlay: at most
 
 ---
 
-## 4. Algorithm §spec:shs-algorithm
+## 2. Algorithm §spec:shs-algorithm
 
 *Status: complete*
 
@@ -98,7 +63,7 @@ out rather than holding fixed height and snapping.
 
 ---
 
-## 5. Height Modes §spec:shs-height-modes
+## 3. Height Modes §spec:shs-height-modes
 
 *Status: complete*
 
@@ -118,7 +83,7 @@ construction fills both.
 
 ---
 
-## 6. Overlay Composition §spec:shs-overlay-composition
+## 4. Overlay Composition §spec:shs-overlay-composition
 
 *Status: complete*
 
@@ -133,7 +98,7 @@ different theme pass their own decoration.
 
 ---
 
-## 7. Navigation §spec:shs-navigation
+## 5. Navigation §spec:shs-navigation
 
 *Status: complete*
 
@@ -147,7 +112,7 @@ section.
 
 ---
 
-## 8. Trailing Items §spec:shs-trailing-items
+## 6. Trailing Items §spec:shs-trailing-items
 
 *Status: complete*
 
@@ -158,7 +123,7 @@ bottom of the stream.
 
 ---
 
-## 9. API Surface §spec:shs-api-surface
+## 7. API Surface §spec:shs-api-surface
 
 *Status: complete*
 
@@ -211,11 +176,11 @@ class StickyHierarchicalScrollView<T> extends StatefulWidget {
 
 ---
 
-## 10. Scrollbar Gutter §spec:shs-scrollbar-gutter
+## 8. Scrollbar Gutter §spec:shs-scrollbar-gutter
 
 *Status: complete*
 
-Implements §req:problem-statement: the primitive owns its own correct
+Implements §req:shs-behavior: the primitive owns its own correct
 layout so consumers don't re-pad to keep trailing content out of the
 scroll lane.
 
@@ -262,7 +227,7 @@ layout change to existing consumers is acceptable.
 
 ---
 
-## 11. Testing Strategy §spec:shs-testing-strategy
+## 9. Testing Strategy §spec:shs-testing-strategy
 
 *Status: complete*
 

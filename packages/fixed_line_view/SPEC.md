@@ -5,66 +5,11 @@ active-line tracking, auto-scroll, and optional pixel-aligned line
 snapping. Wraps `ListView.builder` with conventions common to consoles,
 code views, and log streams.
 
----
-
-## 1. Problem Statement §spec:flv-problem-statement
-
-*Status: complete*
-
-Console-style views share a recurring set of requirements:
-
-- Fixed line height so virtualization is cheap (`ListView.itemExtent`).
-- Track an "active" line (executing G-code, selected log entry) and
-  keep it visible with a configurable auto-scroll rule.
-- Follow new content at the bottom for log streams, but stop
-  auto-following once the user scrolls away — resume only when the
-  user returns to the bottom.
-- Optional pixel-aligned line snapping so every frame renders whole
-  lines, never fractional positions.
-- Optional multi-line text selection.
-
-Each consumer re-implements these as one-off widgets. The package
-extracts the common shape into two widgets (`FixedLineView`,
-`StreamLineView`) and a composition controller
-(`FixedLineViewController`).
+Implements §req:flv-problem, §req:flv-scope, and §req:flv-behavior.
 
 ---
 
-## 2. Scope §spec:flv-scope
-
-*Status: complete*
-
-The package owns the virtualized list shell and its auto-scroll state
-machine. It does not own:
-
-- Line content — the consumer supplies `lineBuilder` / `itemBuilder`.
-- Hierarchical sticky headers — compose with `sticky_hierarchical_scroll`
-  via a shared `ScrollController` (that is why
-  `FixedLineViewController` exists).
-- Text styling, syntax highlighting, decoration — consumer concerns.
-
-Pure Flutter. Depends on `line_snap_scroll_physics` for the optional
-line-snap mode.
-
----
-
-## 3. Why Not Community Packages §spec:flv-why-not-community
-
-*Status: complete*
-
-At extraction time:
-
-- **`xterm`**: a full terminal emulator (ANSI parsing, grid buffer,
-  cursor/keyboard) — far heavier than a scrollable line list.
-- **General `ListView`/`CustomScrollView`** recipes: reimplement
-  follow / suppress / resume each time, often with fling and
-  programmatic-scroll bugs.
-
-A thin wrapper costs less and keeps consumer rendering.
-
----
-
-## 4. Widgets §spec:flv-widgets
+## 1. Widgets §spec:flv-widgets
 
 *Status: complete*
 
@@ -85,7 +30,7 @@ not pass one in, and disposes only what it owns.
 
 ---
 
-## 5. Auto-Scroll State Machine §spec:flv-auto-scroll
+## 2. Auto-Scroll State Machine §spec:flv-auto-scroll
 
 *Status: complete*
 
@@ -106,7 +51,7 @@ respects only explicit programmatic scroll.
 
 ---
 
-## 6. Line Snap §spec:flv-line-snap
+## 3. Line Snap §spec:flv-line-snap
 
 *Status: complete*
 
@@ -127,7 +72,7 @@ visual parity with terminal scrollbars.
 
 ---
 
-## 7. Composition with Sticky Scroll §spec:flv-composition
+## 4. Composition with Sticky Scroll §spec:flv-composition
 
 *Status: complete*
 
@@ -146,7 +91,7 @@ same controller."
 
 ---
 
-## 8. API Surface §spec:flv-api-surface
+## 5. API Surface §spec:flv-api-surface
 
 *Status: complete*
 
@@ -197,7 +142,7 @@ final class FixedLineViewController {
 
 ---
 
-## 9. Scrollbar Gutter §spec:flv-scrollbar-gutter
+## 6. Scrollbar Gutter §spec:flv-scrollbar-gutter
 
 *Status: complete*
 
@@ -236,7 +181,7 @@ consumers opt out with `scrollbarGutter: 0`.
 
 ---
 
-## 10. Testing Strategy §spec:flv-testing-strategy
+## 7. Testing Strategy §spec:flv-testing-strategy
 
 *Status: complete*
 

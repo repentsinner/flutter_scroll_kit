@@ -4,72 +4,11 @@ A Flutter package that renders a REPL-style scrollback: a flat list of
 interleaved input lines and response lines, where input lines pin as
 sticky section headers over the responses they produced.
 
----
-
-## 1. Problem Statement §spec:repl-problem-statement
-
-*Status: complete*
-
-Terminal- and REPL-shaped UIs (grblHAL console, Dart DevTools, shell
-logs) share a scrollback model: the user submitted an input, the
-system emitted one or more response lines, then the user submitted
-another input. Two generic concerns recur across every implementation:
-
-- **Context preservation**: as the user scrolls up through responses,
-  the originating input scrolls off the top and the user loses track
-  of which command produced what. The fix is to pin the current input
-  as a sticky header.
-- **Repetition collapse**: a busy status stream (grblHAL `?` status
-  replies, loop output) floods the scrollback with identical lines.
-  Consumers coalesce duplicates upstream into one entry with a count
-  (`ok ×47`), but the view has to render that count without corrupting
-  scroll position.
-
-The `sticky_hierarchical_scroll` package supplies the pinning
-primitive; `repl_view` specializes it to the two-level input/response
-hierarchy that REPLs actually have, and adds the scroll-anchoring
-behavior needed for coalesced updates.
+Implements §req:repl-problem, §req:repl-scope, and §req:repl-behavior.
 
 ---
 
-## 2. Scope §spec:repl-scope
-
-*Status: complete*
-
-The package owns the REPL scrollback widget and its viewport state
-machine. It does not own:
-
-- Coalescing. Duplicate detection and count aggregation happen
-  upstream in the consumer's data source; `repl_view` consumes the
-  already-coalesced stream. `ConsoleEntry.count > 1` arrives as
-  such; the builder decides how to render the count badge.
-- Entry shape. The consumer implements `ConsoleEntry` on its own type
-  and supplies an `entryBuilder` that produces both the scroll-list
-  row and the sticky-header representation of that row.
-- Input capture. Prompt lines, cursor, keyboard handling, and command
-  dispatch live in the consumer, typically as a trailing item.
-
-Generic over `T extends ConsoleEntry`. Pure Flutter. Depends on
-`sticky_hierarchical_scroll`.
-
----
-
-## 3. Why Extract §spec:repl-why-extract
-
-*Status: complete*
-
-REPL scrollback is a general pattern. Decoupling the coalescing-aware
-viewport from domain concerns (error enrichment, command dispatch)
-keeps domain logic out of the widget layer.
-
-Consumers become thin adapters: the domain's message type implements
-`ConsoleEntry`, a message service feeds the entry list, and domain
-concerns (error classification, retry, formatting) live above the
-widget.
-
----
-
-## 4. Entry Contract §spec:repl-entry-contract
+## 1. Entry Contract §spec:repl-entry-contract
 
 *Status: complete*
 
@@ -87,7 +26,7 @@ abstract class ConsoleEntry {
 section at level 0 and all following non-input entries belong to its
 scope until the next input arrives.
 
-`identity` is the scroll anchor (§5). Consumers typically use a
+`identity` is the scroll anchor (§2). Consumers typically use a
 monotonic integer assigned when the message is created and preserved
 across coalescing updates.
 
@@ -96,7 +35,7 @@ the widget does not inspect it. Coalescing already happened upstream.
 
 ---
 
-## 5. Viewport State Machine §spec:repl-viewport-state
+## 2. Viewport State Machine §spec:repl-viewport-state
 
 *Status: complete*
 
@@ -132,7 +71,7 @@ every update.
 
 ---
 
-## 6. Layering §spec:repl-layering
+## 3. Layering §spec:repl-layering
 
 *Status: complete*
 
@@ -152,12 +91,12 @@ sticky-header rendering, so a single builder covers both.
 
 ---
 
-## 7. API Surface §spec:repl-api-surface
+## 4. API Surface §spec:repl-api-surface
 
 *Status: complete*
 
 ```dart
-abstract class ConsoleEntry { ... }  // see §4
+abstract class ConsoleEntry { ... }  // see §1
 
 class ReplView<T extends ConsoleEntry> extends StatefulWidget {
   const ReplView({
@@ -180,7 +119,7 @@ enforced by assertion.
 
 ---
 
-## 8. Scrollbar Gutter §spec:repl-scrollbar-gutter
+## 5. Scrollbar Gutter §spec:repl-scrollbar-gutter
 
 *Status: complete*
 
@@ -199,7 +138,7 @@ otherwise collide with the scrollbar.
 
 ---
 
-## 9. Testing Strategy §spec:repl-testing-strategy
+## 6. Testing Strategy §spec:repl-testing-strategy
 
 *Status: complete*
 
