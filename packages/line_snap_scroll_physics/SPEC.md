@@ -5,58 +5,11 @@ for any `ScrollView`. Exposes a `ScrollController` that rounds every
 pixel update during drag, fling, and programmatic scroll, plus a
 `ScrollPhysics` that snaps ballistic simulations to the same boundaries.
 
----
-
-## 1. Problem Statement §spec:lssp-problem-statement
-
-*Status: complete*
-
-Terminal- and console-style views need pixel-aligned lines: every frame
-renders whole lines, never fractional positions. Flutter's
-`FixedExtentScrollPhysics` does the same snap math but is gated to
-`FixedExtentScrollController`, so only `ListWheelScrollView` gets it.
-General-purpose `ListView`, `CustomScrollView`, and their sliver
-equivalents have no supported way to get line-snapping physics. See
-[flutter/flutter#41472](https://github.com/flutter/flutter/issues/41472)
-(open since 2019, P3).
+Implements §req:lssp-problem, §req:lssp-scope, and §req:lssp-behavior.
 
 ---
 
-## 2. Scope §spec:lssp-scope
-
-*Status: complete*
-
-The package provides scroll primitives only. It does not:
-
-- Render lines or virtualize content — pair with any list view.
-- Track active lines, auto-scroll, or handle stream inputs — see
-  `fixed_line_view` for that layer.
-- Prescribe alignment semantics beyond the snap axis — line alignment
-  (top versus bottom of viewport) is fixed to bottom-aligned so
-  fractional lines appear at the top (terminal/xterm.js convention).
-
-Pure Flutter. No project-specific code.
-
----
-
-## 3. Why Not Framework or Community Alternatives §spec:lssp-why-not-alternatives
-
-*Status: complete*
-
-- **`FixedExtentScrollPhysics`** (Flutter framework): implements the
-  same snap math but is gated to `FixedExtentScrollController` and
-  `ListWheelScrollView`. The targeting logic is not reusable. The
-  framework issue flutter/flutter#41472 tracks the gap.
-- **`PageScrollPhysics`** (Flutter framework): snaps at viewport
-  granularity, not line granularity. Wrong unit.
-- **pub.dev**: no general-purpose snap-to-line physics.
-
-Extracting the snap math into a reusable package lifts the framework
-restriction with no upstream dependency.
-
----
-
-## 4. API Surface §spec:lssp-api-surface
+## 1. API Surface §spec:lssp-api-surface
 
 *Status: complete*
 
@@ -101,7 +54,7 @@ alone or both together. Using both is the strongest guarantee:
 
 ---
 
-## 5. Snap Alignment §spec:lssp-snap-alignment
+## 2. Snap Alignment §spec:lssp-snap-alignment
 
 *Status: complete*
 
@@ -117,7 +70,7 @@ run before layout, so `LineSnapScrollPhysics` does not need a fallback.
 
 ---
 
-## 6. Mode Switching §spec:lssp-mode-switching
+## 3. Mode Switching §spec:lssp-mode-switching
 
 *Status: complete*
 
@@ -131,7 +84,7 @@ positions, it passes a plain `ScrollController` instead.
 
 ---
 
-## 7. Testing Strategy §spec:lssp-testing-strategy
+## 4. Testing Strategy §spec:lssp-testing-strategy
 
 *Status: complete*
 
