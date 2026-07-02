@@ -58,12 +58,9 @@ Generic over `T extends ConsoleEntry`. Pure Flutter. Depends on
 
 *Status: complete*
 
-REPL scrollback is a general pattern: any terminal-style UI
-(CNC console, network debugger, game-engine REPL, database shell)
-benefits from sticky input headers and coalesced-response rendering.
-Decoupling the scroll and coalescing-aware viewport from CNC-specific
-error enrichment and command dispatch lets the pattern be reused —
-and keeps domain logic out of the widget layer.
+REPL scrollback is a general pattern. Decoupling the coalescing-aware
+viewport from domain concerns (error enrichment, command dispatch)
+keeps domain logic out of the widget layer.
 
 Consumers become thin adapters: the domain's message type implements
 `ConsoleEntry`, a message service feeds the entry list, and domain
@@ -107,8 +104,7 @@ Two states, three transitions.
 
 **Stuck to bottom** (initial, default). The viewport tracks the tail.
 Coalescing updates, tail appends, parent rebuilds, and
-detach/reattach all settle back to `maxScrollExtent`. This is the
-state a log viewer spends most of its time in.
+detach/reattach all settle back to `maxScrollExtent`.
 
 **Floating**. When the user drags away from the bottom, the viewport
 freezes on a `_FloatingAnchor`: an entry `identity` plus a pixel
@@ -130,10 +126,9 @@ Transitions:
   following it, rather than freeze on a stale, now sub-bottom pixel
   offset that would stall auto-follow.
 
-The state machine protects against the most common failure mode:
-coalescing the most recent line (e.g. "ok ×47 → ok ×48") while the
-user is reading scrollback. Without anchoring, the viewport jumps
-with every update.
+Anchoring targets one failure mode: coalescing the most recent line
+while the user reads scrollback would otherwise jump the viewport on
+every update.
 
 ---
 
@@ -199,12 +194,8 @@ gutter for both scrollback rows and the pinned sticky input header
 (`entryBuilder` renders both). Re-padding rows here would double the inset
 and still miss the pinned header.
 
-Why it matters for a REPL: an input header pins over the scroll lane, so
-its trailing controls would otherwise collide with the scrollbar exactly
-where the user reaches for them.
-
-Rejected — re-implementing the gutter in `repl_view`: duplicates
-§spec:shs-scrollbar-gutter, drifts from it, and double-insets the rows.
+Why it matters: a pinned input header's trailing controls would
+otherwise collide with the scrollbar.
 
 ---
 

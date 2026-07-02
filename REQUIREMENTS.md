@@ -28,3 +28,18 @@ scroll infrastructure.
   consumers of the other three to upgrade or re-pin.
 - Rove's `swap-to-pub-dev-deps` workstream — migrating from git
   source deps to pub.dev version deps — unblocks and closes.
+
+## Publication integrity §req:publication-integrity
+
+Independent, per-package publication (§req:success-criteria) holds only
+if the release pipeline preserves three guarantees:
+
+- **Topological order.** A package shall not publish before every
+  package it depends on is resolvable on pub.dev. A consumer published
+  ahead of its dependency fails the pub.dev resolver.
+- **Independent publishability.** Each package shall pass
+  `dart pub publish --dry-run` on its own before any package in a
+  release publishes.
+- **No ambient credentials.** Publication shall authenticate with
+  short-lived, per-publish credentials; the pipeline shall hold no
+  long-lived pub.dev tokens in repository secrets.
