@@ -20,7 +20,7 @@ jobs:
     permissions:
       id-token: write
     # dart-lang/setup-dart v1.7.2
-    uses: dart-lang/setup-dart/.github/workflows/publish.yml@65eb853c7ba17dde3be364c3d2858773e7144260
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@7654d458321ee25acccccfdb86cd48bd95768ff1
     with:
       working-directory: packages/sticky_hierarchical_scroll
       environment: pub.dev

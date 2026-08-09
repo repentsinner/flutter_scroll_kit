@@ -41,7 +41,7 @@ jobs:
       id-token: write # required for OIDC trusted-publisher exchange
     # Pinned to v1.7.2 (released 2025-09-04). Update this SHA when
     # bumping the dart-lang/setup-dart version.
-    uses: dart-lang/setup-dart/.github/workflows/publish.yml@65eb853c7ba17dde3be364c3d2858773e7144260
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@7654d458321ee25acccccfdb86cd48bd95768ff1
     with:
       working-directory: packages/line_snap_scroll_physics
       environment: pub.dev
