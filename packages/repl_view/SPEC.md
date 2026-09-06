@@ -8,7 +8,7 @@ Implements §req:repl-problem, §req:repl-scope, and §req:repl-behavior.
 
 ---
 
-## 1. Entry Contract §spec:repl-entry-contract
+## Entry Contract §spec:repl-entry-contract
 
 *Status: complete*
 
@@ -26,7 +26,7 @@ abstract class ConsoleEntry {
 section at level 0 and all following non-input entries belong to its
 scope until the next input arrives.
 
-`identity` is the scroll anchor (§2). Consumers typically use a
+`identity` is the scroll anchor (§spec:repl-viewport-state). Consumers typically use a
 monotonic integer assigned when the message is created and preserved
 across coalescing updates.
 
@@ -35,7 +35,7 @@ the widget does not inspect it. Coalescing already happened upstream.
 
 ---
 
-## 2. Viewport State Machine §spec:repl-viewport-state
+## Viewport State Machine §spec:repl-viewport-state
 
 *Status: complete*
 
@@ -71,7 +71,7 @@ every update.
 
 ---
 
-## 3. Layering §spec:repl-layering
+## Layering §spec:repl-layering
 
 *Status: complete*
 
@@ -91,12 +91,12 @@ sticky-header rendering, so a single builder covers both.
 
 ---
 
-## 4. API Surface §spec:repl-api-surface
+## API Surface §spec:repl-api-surface
 
 *Status: complete*
 
 ```dart
-abstract class ConsoleEntry { ... }  // see §1
+abstract class ConsoleEntry { ... }  // see §spec:repl-entry-contract
 
 class ReplView<T extends ConsoleEntry> extends StatefulWidget {
   const ReplView({
@@ -119,7 +119,7 @@ enforced by assertion.
 
 ---
 
-## 5. Scrollbar Gutter §spec:repl-scrollbar-gutter
+## Scrollbar Gutter §spec:repl-scrollbar-gutter
 
 *Status: complete*
 
@@ -138,7 +138,7 @@ otherwise collide with the scrollbar.
 
 ---
 
-## 6. Testing Strategy §spec:repl-testing-strategy
+## Testing Strategy §spec:repl-testing-strategy
 
 *Status: complete*
 
