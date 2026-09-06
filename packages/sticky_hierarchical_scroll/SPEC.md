@@ -9,7 +9,7 @@ Implements §req:shs-problem, §req:shs-scope, and §req:shs-behavior.
 
 ---
 
-## 1. Why Slot-Fit §spec:shs-why-slot-fit
+## Why Slot-Fit §spec:shs-why-slot-fit
 
 *Status: complete*
 
@@ -31,7 +31,7 @@ Slot-fit also gives a bounded, predictable overlay: at most
 
 ---
 
-## 2. Algorithm §spec:shs-algorithm
+## Algorithm §spec:shs-algorithm
 
 *Status: complete*
 
@@ -63,7 +63,7 @@ out rather than holding fixed height and snapping.
 
 ---
 
-## 3. Height Modes §spec:shs-height-modes
+## Height Modes §spec:shs-height-modes
 
 *Status: complete*
 
@@ -83,7 +83,7 @@ construction fills both.
 
 ---
 
-## 4. Overlay Composition §spec:shs-overlay-composition
+## Overlay Composition §spec:shs-overlay-composition
 
 *Status: complete*
 
@@ -98,7 +98,7 @@ different theme pass their own decoration.
 
 ---
 
-## 5. Navigation §spec:shs-navigation
+## Navigation §spec:shs-navigation
 
 *Status: complete*
 
@@ -112,7 +112,7 @@ section.
 
 ---
 
-## 6. Trailing Items §spec:shs-trailing-items
+## Trailing Items §spec:shs-trailing-items
 
 *Status: complete*
 
@@ -123,7 +123,7 @@ bottom of the stream.
 
 ---
 
-## 7. API Surface §spec:shs-api-surface
+## API Surface §spec:shs-api-surface
 
 *Status: complete*
 
@@ -176,7 +176,7 @@ class StickyHierarchicalScrollView<T> extends StatefulWidget {
 
 ---
 
-## 8. Scrollbar Gutter §spec:shs-scrollbar-gutter
+## Scrollbar Gutter §spec:shs-scrollbar-gutter
 
 *Status: complete*
 
@@ -227,7 +227,7 @@ layout change to existing consumers is acceptable.
 
 ---
 
-## 9. Testing Strategy §spec:shs-testing-strategy
+## Testing Strategy §spec:shs-testing-strategy
 
 *Status: complete*
 

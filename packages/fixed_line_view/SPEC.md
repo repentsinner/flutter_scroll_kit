@@ -9,7 +9,7 @@ Implements §req:flv-problem, §req:flv-scope, and §req:flv-behavior.
 
 ---
 
-## 1. Widgets §spec:flv-widgets
+## Widgets §spec:flv-widgets
 
 *Status: complete*
 
@@ -30,7 +30,7 @@ not pass one in, and disposes only what it owns.
 
 ---
 
-## 2. Auto-Scroll State Machine §spec:flv-auto-scroll
+## Auto-Scroll State Machine §spec:flv-auto-scroll
 
 *Status: complete*
 
@@ -51,7 +51,7 @@ respects only explicit programmatic scroll.
 
 ---
 
-## 3. Line Snap §spec:flv-line-snap
+## Line Snap §spec:flv-line-snap
 
 *Status: complete*
 
@@ -72,7 +72,7 @@ visual parity with terminal scrollbars.
 
 ---
 
-## 4. Composition with Sticky Scroll §spec:flv-composition
+## Composition with Sticky Scroll §spec:flv-composition
 
 *Status: complete*
 
@@ -91,7 +91,7 @@ same controller."
 
 ---
 
-## 5. API Surface §spec:flv-api-surface
+## API Surface §spec:flv-api-surface
 
 *Status: complete*
 
@@ -142,7 +142,7 @@ final class FixedLineViewController {
 
 ---
 
-## 6. Scrollbar Gutter §spec:flv-scrollbar-gutter
+## Scrollbar Gutter §spec:flv-scrollbar-gutter
 
 *Status: complete*
 
@@ -181,7 +181,7 @@ consumers opt out with `scrollbarGutter: 0`.
 
 ---
 
-## 7. Testing Strategy §spec:flv-testing-strategy
+## Testing Strategy §spec:flv-testing-strategy
 
 *Status: complete*
 

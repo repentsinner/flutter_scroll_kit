@@ -15,7 +15,7 @@ scrollback.
 | [`repl_view`](packages/repl_view) | Two-level REPL scrollback: input lines pin as sticky section headers, response lines scroll as leaves. Identity-anchored viewport preservation across coalescing and tab-switches. |
 
 Each package ships its own `SPEC.md` describing design rationale and
-API. Per-package governance, not root-governed.
+API. Per-package governance, not root-governed (§spec:packages).
 
 ## Dependency graph
 
@@ -24,7 +24,8 @@ line_snap_scroll_physics ── fixed_line_view
 sticky_hierarchical_scroll ── repl_view
 ```
 
-All four are pure Flutter — no third-party dependencies.
+All four are pure Flutter — no third-party dependencies
+(§spec:dependency-graph).
 
 ## Development
 
@@ -45,7 +46,7 @@ These packages were extracted from
 [repentsinner/rove](https://github.com/repentsinner/rove) before
 being moved here for publication. Full pre-extraction history lives
 in that repo; this repo carries per-file history from the extraction
-point forward.
+point forward (§spec:origin-and-license).
 
 ## License
 
