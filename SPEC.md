@@ -7,7 +7,7 @@ use. The repo owns packaging, dependency graph, and publication
 concerns; per-package internal design, API, and algorithms are
 governed by each package's own `SPEC.md` under `packages/<name>/`.
 
-## 1. Packages §spec:packages
+## Packages §spec:packages
 
 *Status: complete*
 
@@ -24,7 +24,7 @@ each with its own `SPEC.md` that governs its internal design:
 All four target pure Flutter — no third-party runtime dependencies.
 Dev dependencies are limited to `flutter_lints` and `flutter_test`.
 
-## 2. Dependency Graph §spec:dependency-graph
+## Dependency Graph §spec:dependency-graph
 
 *Status: complete*
 
@@ -48,7 +48,7 @@ base packages (`line_snap_scroll_physics` and
 dependency is not yet on pub.dev fails the resolver, so order is
 load-bearing.
 
-## 3. Publication Model §spec:publication-model
+## Publication Model §spec:publication-model
 
 *Status: complete*
 
@@ -72,7 +72,7 @@ independently publishable before any is published. Rationale: a
 partially-published dependency graph is harder to recover from than
 a failed dry-run on the first package.
 
-## 4. Development Workflow §spec:development-workflow
+## Development Workflow §spec:development-workflow
 
 *Status: complete*
 
@@ -86,7 +86,7 @@ The root `pubspec.yaml` lists each package and example under
 `workspace:`, and each declares `resolution: workspace`. A single
 `dart pub get` at the root resolves the whole tree against one shared
 lockfile, so a sibling dependency expressed as a hosted version
-constraint (§3) resolves to the local package during development yet
+constraint (§spec:publication-model) resolves to the local package during development yet
 stays publishable. Examples join the workspace for the same reason:
 each depends on its parent package by path, so the parent's hosted
 sibling constraints resolve locally — not against pub.dev — before
@@ -98,7 +98,7 @@ same commands CI runs. No workspace-management wrapper (Melos or
 otherwise) is needed; native workspace support covers bootstrap and
 resolution.
 
-## 5. Origin and License §spec:origin-and-license
+## Origin and License §spec:origin-and-license
 
 *Status: complete*
 
@@ -114,7 +114,7 @@ carries per-file history from the extraction onward.
 
 BSD 3-Clause, matching upstream rove.
 
-## 6. Publication Automation §spec:publication-automation
+## Publication Automation §spec:publication-automation
 
 *Status: complete*
 

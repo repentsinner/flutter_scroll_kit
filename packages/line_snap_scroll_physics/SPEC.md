@@ -9,7 +9,7 @@ Implements §req:lssp-problem, §req:lssp-scope, and §req:lssp-behavior.
 
 ---
 
-## 1. API Surface §spec:lssp-api-surface
+## API Surface §spec:lssp-api-surface
 
 *Status: complete*
 
@@ -54,7 +54,7 @@ alone or both together. Using both is the strongest guarantee:
 
 ---
 
-## 2. Snap Alignment §spec:lssp-snap-alignment
+## Snap Alignment §spec:lssp-snap-alignment
 
 *Status: complete*
 
@@ -70,7 +70,7 @@ run before layout, so `LineSnapScrollPhysics` does not need a fallback.
 
 ---
 
-## 3. Mode Switching §spec:lssp-mode-switching
+## Mode Switching §spec:lssp-mode-switching
 
 *Status: complete*
 
@@ -84,7 +84,7 @@ positions, it passes a plain `ScrollController` instead.
 
 ---
 
-## 4. Testing Strategy §spec:lssp-testing-strategy
+## Testing Strategy §spec:lssp-testing-strategy
 
 *Status: complete*
 
