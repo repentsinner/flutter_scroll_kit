@@ -92,6 +92,13 @@ Sticky headers render as an overlay stacked above the list (via a
 header twice during the handoff frame. The overlay hides the row behind
 it on entry — no duplicate.
 
+A pinned header draws the data the current items carry. When the items
+change and the same sections stay pinned at the same slots, the overlay
+draws each header from the new item at its index in that frame. Without
+this, a consumer whose section rows carry live values would see a pinned
+row freeze at the values it held when it pinned, and refresh only when
+scrolling changed which rows were pinned.
+
 The overlay's decoration is `StickyScrollConfig.stickyDecoration`
 (defaults to VS Code's dark background). Consumers styling against a
 different theme pass their own decoration.
