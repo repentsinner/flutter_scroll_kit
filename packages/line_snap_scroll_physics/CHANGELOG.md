@@ -5,6 +5,13 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3](https://github.com/repentsinner/flutter_scroll_kit/compare/line_snap_scroll_physics-v0.1.2...line_snap_scroll_physics-v0.1.3) (2026-10-06)
+
+
+### Bug Fixes
+
+* **sticky_hierarchical_scroll:** draw pinned headers from the current items ([#51](https://github.com/repentsinner/flutter_scroll_kit/issues/51)) ([be79826](https://github.com/repentsinner/flutter_scroll_kit/commit/be79826df265cf22564291ff677cc1abea6df238))
+
 ## [0.1.2](https://github.com/repentsinner/flutter_scroll_kit/compare/line_snap_scroll_physics-v0.1.1...line_snap_scroll_physics-v0.1.2) (2026-06-09)
 
 
