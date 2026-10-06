@@ -36,6 +36,8 @@ analyzer:
     unnecessary_late: error
     prefer_const_constructors: error
     prefer_asserts_with_message: error
+  exclude:
+    - build/**
 
 linter:
   rules:

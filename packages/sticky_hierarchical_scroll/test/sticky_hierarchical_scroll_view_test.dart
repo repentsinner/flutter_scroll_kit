@@ -155,6 +155,42 @@ void main() {
       expect(find.byKey(const ValueKey('sticky_3')), findsOneWidget);
     });
 
+    testWidgets('a pinned header shows its item\'s new data when the items '
+        'change and the pinned set does not', (tester) async {
+      // A consumer that rebuilds its items with fresh values — live figures
+      // on a section row — keeps the same sections at the same offsets, so
+      // the pinned set does not change. The overlay still has to draw the
+      // data the new items carry, not the data from when the header pinned.
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        _buildTestWidget(items: testItems, controller: controller),
+      );
+      await tester.pump();
+      controller.jumpTo(80.0);
+      await tester.pump();
+
+      String? pinned(int index) =>
+          tester.widget<Text>(find.byKey(ValueKey('sticky_$index'))).data;
+      expect(pinned(0), 'Section A');
+      expect(pinned(3), 'Sub B');
+
+      final updated = [
+        const _TestItem('Section A (updated)', 0, isSection: true),
+        ...testItems.sublist(1, 3),
+        const _TestItem('Sub B (updated)', 1, isSection: true),
+        ...testItems.sublist(4),
+      ];
+      await tester.pumpWidget(
+        _buildTestWidget(items: updated, controller: controller),
+      );
+      await tester.pump();
+
+      expect(pinned(0), 'Section A (updated)');
+      expect(pinned(3), 'Sub B (updated)');
+    });
+
     testWidgets('external ScrollController works', (tester) async {
       final controller = ScrollController();
       addTearDown(controller.dispose);
