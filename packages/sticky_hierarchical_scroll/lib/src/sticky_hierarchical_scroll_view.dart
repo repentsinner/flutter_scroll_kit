@@ -205,6 +205,7 @@ class _StickyHierarchicalScrollViewState<T>
     if (oldWidget.items != widget.items) {
       _rebuildOffsetTable();
       _updateStickyModel();
+      _refreshActiveHeaderData();
       // Recalculate sticky headers after layout completes with
       // the new items. Without this, headers lag by one frame when
       // an external controller auto-scrolls in a post-frame callback.
@@ -212,6 +213,25 @@ class _StickyHierarchicalScrollViewState<T>
         if (mounted) _updateStickyHeaders();
       });
     }
+  }
+
+  /// Point each active header at the rebuilt candidate at its index, keeping
+  /// its slot position.
+  ///
+  /// The post-frame recompute only replaces the active headers when an index
+  /// or a slot position changes. New items that keep the same sections at the
+  /// same offsets change neither, so without this the overlay would keep
+  /// drawing the data the headers pinned with. Done here, before the rebuild,
+  /// so the new data reaches the overlay in the same frame. A header whose
+  /// index no longer names a section keeps its old candidate until that
+  /// recompute re-fits the slots.
+  void _refreshActiveHeaderData() {
+    if (_currentActiveHeaders.isEmpty) return;
+    final byIndex = {for (final c in _stickyCandidates) c.originalIndex: c};
+    _currentActiveHeaders = [
+      for (final h in _currentActiveHeaders)
+        _ActiveHeader(byIndex[h.candidate.originalIndex] ?? h.candidate, h.top),
+    ];
   }
 
   // -- Offset table --
