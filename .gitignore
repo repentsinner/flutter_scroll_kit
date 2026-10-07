@@ -12,7 +12,8 @@ pubspec.lock
 
 # IDE
 .idea/
-.vscode/
+.vscode/*
+!.vscode/settings.json
 *.iml
 *.ipr
 *.iws
@@ -20,3 +21,6 @@ pubspec.lock
 # OS
 .DS_Store
 Thumbs.db
+
+# FVM Version Cache
+.fvm/

@@ -2,7 +2,12 @@ name: flutter_scroll_kit_workspace
 publish_to: none
 
 environment:
+  # The Flutter floor follows from the Dart floor: a Flutter release bundles
+  # exactly one Dart SDK, and 3.38.1 is the first stable whose Dart satisfies
+  # ^3.10.0 (3.38.0 ships a 3.10.0 beta build, which sorts below it). `ci.yml`
+  # builds this floor on every PR, so it stays a tested property, not a claim.
   sdk: ^3.10.0
+  flutter: ">=3.38.1"
 
 workspace:
   - packages/line_snap_scroll_physics
