@@ -1,5 +1,16 @@
 name: CI
 
+# Every check runs twice, against two SDKs that answer different questions:
+#
+#   pinned — the `.fvmrc` version, the toolchain this repo develops on.
+#            Catches lints and deprecations the newest analyzer reports.
+#   floor  — the oldest Flutter `pubspec.yaml` claims to support. Consumers
+#            resolve against it, so it is verified like anything else.
+#
+# Neither version is written here. `floor` is read from the root
+# `environment:` block and `pinned` from `.fvmrc`, so each value keeps one
+# home and the matrix follows a bump automatically.
+
 on:
   push:
     branches: [main]
@@ -14,26 +25,44 @@ permissions:
   contents: read
 
 jobs:
-  analyze-and-test:
+  check:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      # Report both SDKs. Cancelling one leg because the other failed hides
+      # half of what the matrix exists to say.
+      fail-fast: false
+      matrix:
+        sdk: [floor, pinned]
 
     steps:
       - uses: actions/checkout@v7
 
+      - id: sdk
+        name: Resolve SDK version
+        env:
+          MATRIX_SDK: ${{ matrix.sdk }}
+        run: .github/scripts/resolve-sdk.sh
+
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: ${{ steps.sdk.outputs.version }}
           cache: true
 
       - name: Install dependencies
         run: dart pub get
 
+      # dart format output can change between SDK releases, so formatting
+      # is held to the toolchain the repo develops on.
       - name: Format check
+        if: matrix.sdk == 'pinned'
         run: dart format --output=none --set-exit-if-changed .
 
+      # The floor analyzer predates some lints the pinned one enforces, so
+      # infos are fatal only on the pinned leg.
       - name: Analyze
-        run: dart analyze --fatal-infos
+        run: dart analyze ${{ matrix.sdk == 'pinned' && '--fatal-infos' || '' }}
 
       - name: Test
         run: |
@@ -45,3 +74,17 @@ jobs:
               echo "::endgroup::"
             fi
           done
+
+  # Keeps the check name the branch has always reported. A matrix job reports
+  # one check per leg, so this aggregate is the single result to require.
+  analyze-and-test:
+    if: always()
+    needs: [check]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        env:
+          CHECK: ${{ needs.check.result }}
+        run: |
+          echo "check=$CHECK"
+          [ "$CHECK" = success ] || { echo "::error::check result: $CHECK"; exit 1; }
