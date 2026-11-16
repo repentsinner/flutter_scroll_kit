@@ -1,0 +1,686 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_scroll_kit/repl_view.dart';
+import 'package:flutter_scroll_kit/sticky_hierarchical_scroll.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+/// Minimal test-only [ConsoleEntry] implementation.
+class _Entry implements ConsoleEntry {
+  @override
+  final String value;
+  @override
+  final bool isInput;
+  @override
+  final String coalescingKey;
+  @override
+  final int count;
+  @override
+  final Object identity;
+
+  const _Entry(
+    this.value, {
+    required this.isInput,
+    required this.identity,
+    this.count = 1,
+    this.coalescingKey = '',
+  });
+
+  factory _Entry.input(String v, {required int id}) =>
+      _Entry(v, isInput: true, coalescingKey: 'user:$v', identity: id);
+
+  factory _Entry.response(String v, {required int id, int count = 1}) =>
+      _Entry(v, isInput: false, count: count, coalescingKey: v, identity: id);
+
+  _Entry copyWith({String? value, int? count}) => _Entry(
+    value ?? this.value,
+    isInput: isInput,
+    identity: identity,
+    count: count ?? this.count,
+    coalescingKey: coalescingKey,
+  );
+}
+
+Widget _harness({
+  required List<_Entry> entries,
+  ScrollController? controller,
+  int trailingItemCount = 0,
+  Widget Function(BuildContext, int)? trailingItemBuilder,
+  double itemExtent = 16.0,
+  int maxStickyHeaders = 1,
+}) {
+  return MaterialApp(
+    home: Scaffold(
+      body: SizedBox(
+        height: 400,
+        child: ReplView<_Entry>(
+          entries: entries,
+          itemExtent: itemExtent,
+          controller: controller,
+          maxStickyHeaders: maxStickyHeaders,
+          trailingItemCount: trailingItemCount,
+          trailingItemBuilder: trailingItemBuilder,
+          entryBuilder: (context, entry) {
+            return Row(
+              children: [
+                if (entry.count > 1)
+                  Text(
+                    'x${entry.count}',
+                    key: ValueKey('count:${entry.value}'),
+                  ),
+                Expanded(
+                  child: Text(
+                    entry.value,
+                    key: ValueKey('row:${entry.value}'),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    ),
+  );
+}
+
+List<_Entry> _buildEntries({required int responseCount, int startId = 0}) {
+  final entries = <_Entry>[_Entry.input('cmd', id: startId)];
+  for (var i = 0; i < responseCount; i++) {
+    entries.add(_Entry.response('ok-$i', id: startId + 1 + i));
+  }
+  return entries;
+}
+
+void main() {
+  group('ReplView', () {
+    testWidgets('wraps StickyHierarchicalScrollView with entries', (
+      tester,
+    ) async {
+      final entries = [
+        _Entry.input(r'$$', id: 0),
+        _Entry.response('[VER:1.1]', id: 1),
+        _Entry.response('ok', id: 2),
+      ];
+
+      await tester.pumpWidget(_harness(entries: entries));
+      await tester.pump();
+
+      expect(find.byType(StickyHierarchicalScrollView<_Entry>), findsOneWidget);
+      final scrollView = tester.widget<StickyHierarchicalScrollView<_Entry>>(
+        find.byType(StickyHierarchicalScrollView<_Entry>),
+      );
+      expect(scrollView.items.length, entries.length);
+    });
+
+    testWidgets('input entries register as sticky sections', (tester) async {
+      final entries = [
+        _Entry.input('G0 X10', id: 0),
+        _Entry.response('ok', id: 1),
+        _Entry.input('G0 X20', id: 2),
+        _Entry.response('ok', id: 3),
+      ];
+
+      await tester.pumpWidget(_harness(entries: entries));
+      await tester.pump();
+
+      final scrollView = tester.widget<StickyHierarchicalScrollView<_Entry>>(
+        find.byType(StickyHierarchicalScrollView<_Entry>),
+      );
+
+      // getLevel: input -> 0, response -> 1
+      expect(scrollView.getLevel(entries[0]), 0);
+      expect(scrollView.getLevel(entries[1]), 1);
+
+      // isSection: only inputs
+      expect(scrollView.isSection(entries[0]), true);
+      expect(scrollView.isSection(entries[1]), false);
+      expect(scrollView.isSection(entries[2]), true);
+    });
+
+    testWidgets('renders count badge when entry.count > 1', (tester) async {
+      final entries = [
+        _Entry.input(r'$$', id: 0),
+        _Entry.response('ok', id: 1, count: 47),
+      ];
+
+      await tester.pumpWidget(_harness(entries: entries));
+      await tester.pump();
+
+      expect(find.byKey(const ValueKey('count:ok')), findsOneWidget);
+      expect(find.text('x47'), findsOneWidget);
+    });
+
+    testWidgets('omits count badge when entry.count == 1', (tester) async {
+      final entries = [
+        _Entry.input(r'$$', id: 0),
+        _Entry.response('ok', id: 1),
+      ];
+
+      await tester.pumpWidget(_harness(entries: entries));
+      await tester.pump();
+
+      expect(find.byKey(const ValueKey('count:ok')), findsNothing);
+    });
+
+    testWidgets('renders trailing items after entries', (tester) async {
+      final entries = [_Entry.input('A', id: 0), _Entry.response('B', id: 1)];
+
+      await tester.pumpWidget(
+        _harness(
+          entries: entries,
+          trailingItemCount: 2,
+          trailingItemBuilder: (context, index) => SizedBox(
+            height: 16,
+            child: Text('trailing-$index', key: ValueKey('trailing-$index')),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byKey(const ValueKey('trailing-0')), findsOneWidget);
+      expect(find.byKey(const ValueKey('trailing-1')), findsOneWidget);
+    });
+
+    testWidgets('auto-scrolls to bottom when entries grow', (tester) async {
+      final controller = ScrollController();
+      final entries = _buildEntries(responseCount: 50);
+
+      await tester.pumpWidget(
+        _harness(entries: List.of(entries), controller: controller),
+      );
+      await tester.pumpAndSettle();
+      entries.add(_Entry.response('ok-new', id: 9999));
+      await tester.pumpWidget(
+        _harness(entries: List.of(entries), controller: controller),
+      );
+      await tester.pumpAndSettle();
+
+      // We should be at the bottom — within half a pixel of maxScrollExtent.
+      final pos = controller.position;
+      expect(pos.pixels, closeTo(pos.maxScrollExtent, 0.5));
+    });
+
+    testWidgets('suspends auto-scroll after user drags away from the bottom', (
+      tester,
+    ) async {
+      final controller = ScrollController();
+      final entries = _buildEntries(responseCount: 50);
+
+      await tester.pumpWidget(
+        _harness(entries: List.of(entries), controller: controller),
+      );
+      await tester.pumpAndSettle();
+
+      // Drag content down (finger moves down) to scroll the list
+      // up — leaves the bottom.
+      await tester.drag(find.byType(ReplView<_Entry>), const Offset(0, 300));
+      await tester.pumpAndSettle();
+      expect(
+        controller.position.pixels,
+        lessThan(controller.position.maxScrollExtent - 16.0),
+      );
+      final scrolledAway = controller.position.pixels;
+
+      // Add a new entry — auto-scroll must NOT fire.
+      entries.add(_Entry.response('ok-new', id: 9999));
+      await tester.pumpWidget(
+        _harness(entries: List.of(entries), controller: controller),
+      );
+      await tester.pumpAndSettle();
+      // Position must not have jumped to the new max.
+      expect(controller.position.pixels, closeTo(scrolledAway, 0.5));
+    });
+  });
+
+  group('ReplView viewport anchoring', () {
+    testWidgets('coalescing update while floating preserves viewport', (
+      tester,
+    ) async {
+      final controller = ScrollController();
+      final entries = _buildEntries(responseCount: 60);
+
+      await tester.pumpWidget(
+        _harness(entries: List.of(entries), controller: controller),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.drag(find.byType(ReplView<_Entry>), const Offset(0, 300));
+      await tester.pumpAndSettle();
+      final floatingPixels = controller.position.pixels;
+      expect(
+        floatingPixels,
+        lessThan(controller.position.maxScrollExtent - 16.0),
+      );
+
+      // Mutate last response in place (same identity, bumped count).
+      final lastIdx = entries.length - 1;
+      entries[lastIdx] = entries[lastIdx].copyWith(count: 5);
+
+      await tester.pumpWidget(
+        _harness(entries: List.of(entries), controller: controller),
+      );
+      await tester.pumpAndSettle();
+
+      expect(controller.position.pixels, closeTo(floatingPixels, 0.5));
+    });
+
+    testWidgets('tail append while floating preserves viewport', (
+      tester,
+    ) async {
+      final controller = ScrollController();
+      final entries = _buildEntries(responseCount: 60);
+
+      await tester.pumpWidget(
+        _harness(entries: List.of(entries), controller: controller),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.drag(find.byType(ReplView<_Entry>), const Offset(0, 300));
+      await tester.pumpAndSettle();
+      final floatingPixels = controller.position.pixels;
+
+      // Append 20 new entries at the tail.
+      for (var i = 0; i < 20; i++) {
+        entries.add(_Entry.response('new-$i', id: 1000 + i));
+      }
+      await tester.pumpWidget(
+        _harness(entries: List.of(entries), controller: controller),
+      );
+      await tester.pumpAndSettle();
+
+      expect(controller.position.pixels, closeTo(floatingPixels, 0.5));
+    });
+
+    testWidgets('anchor trim snaps viewport to bottom', (tester) async {
+      final controller = ScrollController();
+      final entries = _buildEntries(responseCount: 80);
+
+      await tester.pumpWidget(
+        _harness(entries: List.of(entries), controller: controller),
+      );
+      await tester.pumpAndSettle();
+
+      // Drag to float somewhere near the top.
+      await tester.drag(find.byType(ReplView<_Entry>), const Offset(0, 800));
+      await tester.pumpAndSettle();
+      expect(
+        controller.position.pixels,
+        lessThan(controller.position.maxScrollExtent - 16.0),
+      );
+
+      // Trim the head: remove more entries than the viewport could
+      // possibly anchor to, guaranteeing the anchor entry is gone.
+      entries.removeRange(0, 60);
+      await tester.pumpWidget(
+        _harness(entries: List.of(entries), controller: controller),
+      );
+      await tester.pumpAndSettle();
+
+      // Anchor entry is gone — should snap to bottom of new list.
+      expect(
+        controller.position.pixels,
+        closeTo(controller.position.maxScrollExtent, 0.5),
+      );
+    });
+
+    testWidgets(
+      'anchor clamped to the bottom by a tail trim re-enters stuck state',
+      (tester) async {
+        final controller = ScrollController();
+        // 81 entries (1 input + 80 responses) x 16px in a 400px viewport.
+        final entries = _buildEntries(responseCount: 80);
+
+        await tester.pumpWidget(
+          _harness(entries: List.of(entries), controller: controller),
+        );
+        await tester.pumpAndSettle();
+
+        // Float deterministically partway up. jumpTo emits a settled
+        // notification away from the bottom, anchoring on entry ~37.
+        controller.jumpTo(600);
+        await tester.pumpAndSettle();
+        expect(
+          controller.position.pixels,
+          lessThan(controller.position.maxScrollExtent - 16.0),
+        );
+
+        // Trim the tail so the anchor entry survives but its target lands
+        // past the new (smaller) maxScrollExtent — the view sits at the
+        // bottom while still nominally floating.
+        entries.removeRange(42, entries.length);
+        await tester.pumpWidget(
+          _harness(entries: List.of(entries), controller: controller),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          controller.position.pixels,
+          closeTo(controller.position.maxScrollExtent, 0.5),
+        );
+
+        // Appending must follow the tail: reaching the bottom is a return
+        // to stuck, not a stale sub-bottom anchor that stops auto-follow.
+        for (var i = 0; i < 40; i++) {
+          entries.add(_Entry.response('grow-$i', id: 2000 + i));
+        }
+        await tester.pumpWidget(
+          _harness(entries: List.of(entries), controller: controller),
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          controller.position.pixels,
+          closeTo(controller.position.maxScrollExtent, 0.5),
+        );
+      },
+    );
+
+    testWidgets(
+      'anchor landing within one item of the bottom re-enters stuck state',
+      (tester) async {
+        final controller = ScrollController();
+        final entries = _buildEntries(responseCount: 80);
+
+        await tester.pumpWidget(
+          _harness(entries: List.of(entries), controller: controller),
+        );
+        await tester.pumpAndSettle();
+
+        // Float deterministically: jumpTo(600) anchors on entry 37 with an
+        // 8px offset, fixing the anchor target at 600px.
+        controller.jumpTo(600);
+        await tester.pumpAndSettle();
+
+        // Trim so the anchor survives but its target (600) lands inside the
+        // one-item tolerance band below maxScrollExtent: 63 entries give
+        // max = 63*16 - 400 = 608, so 592 <= 600 < 608. _isAtBottom() is
+        // true here, yet the target is strictly below maxScrollExtent — the
+        // case the old `target >= maxScrollExtent` guard missed.
+        entries.removeRange(63, entries.length);
+        await tester.pumpWidget(
+          _harness(entries: List.of(entries), controller: controller),
+        );
+        await tester.pumpAndSettle();
+        // Pin the constructed geometry: max = 608, so the anchor target 600
+        // sits in (592, 608) — at-bottom per _isAtBottom but below max. The
+        // old guard left it floating here; the fix snaps to the tail.
+        expect(controller.position.maxScrollExtent, closeTo(608.0, 0.5));
+
+        // Appending must follow the tail. With a stale sub-bottom anchor,
+        // auto-follow stalls and the view stays pinned ~8px above bottom.
+        for (var i = 0; i < 40; i++) {
+          entries.add(_Entry.response('grow-$i', id: 2000 + i));
+        }
+        await tester.pumpWidget(
+          _harness(entries: List.of(entries), controller: controller),
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          controller.position.pixels,
+          closeTo(controller.position.maxScrollExtent, 0.5),
+        );
+      },
+    );
+
+    testWidgets('returning to bottom re-enters stuck state', (tester) async {
+      final controller = ScrollController();
+      final entries = _buildEntries(responseCount: 60);
+
+      await tester.pumpWidget(
+        _harness(entries: List.of(entries), controller: controller),
+      );
+      await tester.pumpAndSettle();
+
+      // Float first.
+      await tester.drag(find.byType(ReplView<_Entry>), const Offset(0, 300));
+      await tester.pumpAndSettle();
+      expect(
+        controller.position.pixels,
+        lessThan(controller.position.maxScrollExtent - 16.0),
+      );
+
+      // Drag back to the bottom.
+      await tester.drag(find.byType(ReplView<_Entry>), const Offset(0, -1000));
+      await tester.pumpAndSettle();
+      expect(
+        controller.position.pixels,
+        closeTo(controller.position.maxScrollExtent, 0.5),
+      );
+
+      // New entry should auto-scroll since we're back to stuck.
+      entries.add(_Entry.response('ok-new', id: 9999));
+      await tester.pumpWidget(
+        _harness(entries: List.of(entries), controller: controller),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        controller.position.pixels,
+        closeTo(controller.position.maxScrollExtent, 0.5),
+      );
+    });
+  });
+
+  group('ReplView sticky input pinning', () {
+    testWidgets('input scrolled above the top pins at the viewport top', (
+      tester,
+    ) async {
+      final controller = ScrollController();
+      // One input followed by many responses: scrolling down pushes the
+      // input row off the top while its scope (responses) stays visible.
+      final entries = _buildEntries(responseCount: 120);
+
+      await tester.pumpWidget(
+        _harness(entries: List.of(entries), controller: controller),
+      );
+      await tester.pumpAndSettle();
+
+      // Scroll far past the input row (row 0 at offset 0..16) so the
+      // normal row is virtualized out of the built range, leaving only
+      // the pinned header. itemExtent is 16, so jumping to 800 puts the
+      // input ~50 rows above the top.
+      controller.jumpTo(800);
+      await tester.pumpAndSettle();
+
+      // The input text still resolves to exactly one widget — the pinned
+      // header in the sticky overlay (the scroll row is out of range).
+      final inputFinder = find.text('cmd');
+      expect(inputFinder, findsOneWidget);
+
+      // The pinned header sits at the viewport top. The viewport's top is
+      // the top of the ReplView box.
+      final viewportTop = tester.getTopLeft(find.byType(ReplView<_Entry>)).dy;
+      final headerTop = tester.getTopLeft(inputFinder).dy;
+      expect(headerTop, closeTo(viewportTop, 0.5));
+    });
+  });
+
+  group('ReplView empty entries', () {
+    testWidgets('renders without error and builds the sticky view', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_harness(entries: const []));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(StickyHierarchicalScrollView<_Entry>), findsOneWidget);
+    });
+
+    testWidgets(
+      'empty list with the internal controller mounts and pumps cleanly',
+      (tester) async {
+        // No external controller: exercises the internal-controller path
+        // through _captureAnchor / _isAtBottom with no clients/entries.
+        await tester.pumpWidget(_harness(entries: const []));
+        await tester.pump();
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        expect(
+          find.byType(StickyHierarchicalScrollView<_Entry>),
+          findsOneWidget,
+        );
+      },
+    );
+  });
+
+  group('ReplView controller disposal', () {
+    testWidgets('disposes its internal controller without error on unmount', (
+      tester,
+    ) async {
+      // No controller supplied — ReplView owns _ownController.
+      await tester.pumpWidget(
+        _harness(entries: _buildEntries(responseCount: 10)),
+      );
+      await tester.pumpAndSettle();
+
+      // Unmount by pumping a different widget tree.
+      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('does not dispose a consumer-supplied controller', (
+      tester,
+    ) async {
+      final external = ScrollController();
+
+      await tester.pumpWidget(
+        _harness(
+          entries: _buildEntries(responseCount: 10),
+          controller: external,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Unmount ReplView.
+      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+      await tester.pumpAndSettle();
+
+      // The consumer still owns the controller: disposing it must not
+      // throw an "already disposed" error.
+      expect(external.dispose, returnsNormally);
+    });
+
+    testWidgets('releases the internal controller when one is later supplied', (
+      tester,
+    ) async {
+      // Start with no controller (ReplView owns _ownController).
+      await tester.pumpWidget(
+        _harness(entries: _buildEntries(responseCount: 10)),
+      );
+      await tester.pumpAndSettle();
+
+      // Supply an external controller: didUpdateWidget disposes
+      // _ownController and adopts the external one.
+      final external = ScrollController();
+      await tester.pumpWidget(
+        _harness(
+          entries: _buildEntries(responseCount: 10),
+          controller: external,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+
+      // Unmount; the external controller remains the consumer's to
+      // dispose.
+      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+      await tester.pumpAndSettle();
+      expect(external.dispose, returnsNormally);
+    });
+  });
+
+  group('ConsoleEntry contract', () {
+    test(
+      'implementations expose value, isInput, coalescingKey, count, identity',
+      () {
+        const e = _Entry(
+          'hello',
+          isInput: true,
+          coalescingKey: 'user:hello',
+          count: 3,
+          identity: 42,
+        );
+        expect(e.value, 'hello');
+        expect(e.isInput, true);
+        expect(e.coalescingKey, 'user:hello');
+        expect(e.count, 3);
+        expect(e.identity, 42);
+      },
+    );
+  });
+
+  group('ReplView row identity', () {
+    testWidgets('evicting the oldest entry keeps every other row\'s element', (
+      tester,
+    ) async {
+      var entries = <_Entry>[
+        for (int i = 0; i < 10; i++) _Entry.response('line $i', id: i),
+      ];
+      final states = <String, State>{};
+
+      late StateSetter setOuter;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) {
+                setOuter = setState;
+                return SizedBox(
+                  height: 400,
+                  child: ReplView<_Entry>(
+                    entries: entries,
+                    itemExtent: 16.0,
+                    entryBuilder: (context, entry) =>
+                        _StateProbe(entry.value, states),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+      final before = Map.of(states);
+
+      // A full scrollback evicts its oldest line as a new one arrives.
+      setOuter(
+        () => entries = [
+          ...entries.sublist(1),
+          _Entry.response('line 10', id: 10),
+        ],
+      );
+      await tester.pump();
+
+      for (int i = 1; i < 10; i++) {
+        expect(
+          identical(states['line $i'], before['line $i']),
+          isTrue,
+          reason: 'line $i must keep its element across the eviction',
+        );
+      }
+    });
+  });
+}
+
+/// Row that records the [State] showing each value, so a test can tell
+/// whether a row kept its element.
+class _StateProbe extends StatefulWidget {
+  const _StateProbe(this.value, this.states);
+
+  final String value;
+  final Map<String, State> states;
+
+  @override
+  State<_StateProbe> createState() => _StateProbeState();
+}
+
+class _StateProbeState extends State<_StateProbe> {
+  @override
+  Widget build(BuildContext context) {
+    widget.states[widget.value] = this;
+    return Text(widget.value);
+  }
+}

@@ -1,37 +1,41 @@
 # flutter_scroll_kit Specification
 
-A publication-focused monorepo of four composable Flutter scroll
-primitives extracted from
-[repentsinner/rove](https://github.com/repentsinner/rove) for external
-use. The repo owns packaging, dependency graph, and publication
-concerns; per-package internal design, API, and algorithms are
-governed by each package's own `SPEC.md` under `packages/<name>/`.
+One pub.dev package of four composable Flutter scroll primitives
+extracted from [repentsinner/rove](https://github.com/repentsinner/rove)
+for external use. This file owns packaging, library layout, and
+publication. Each primitive's internal design, API, and algorithms are
+governed by its own `SPEC.md` under `doc/<primitive>/`.
 
-## Packages §spec:packages
+## Libraries §spec:libraries
 
 *Status: complete*
 
-Implements §req:problem-statement. The repo publishes four packages,
-each with its own `SPEC.md` that governs its internal design:
+Implements §req:problem-statement and §req:packaging. The package
+`flutter_scroll_kit` ships one public library per primitive, plus a
+library that exports all four:
 
-| Package | Purpose | Depends on |
-|---------|---------|------------|
-| `line_snap_scroll_physics` | `ScrollController` and `ScrollPhysics` that quantize offsets to fixed line boundaries | — |
-| `sticky_hierarchical_scroll` | VS Code–style hierarchical sticky header overlay for flat lists | — |
-| `fixed_line_view` | Virtualized fixed-height line view with active-line tracking and auto-scroll | `line_snap_scroll_physics` |
-| `repl_view` | Two-level REPL scrollback with sticky input headers, coalesced responses, and identity-anchored viewport | `sticky_hierarchical_scroll` |
+| Library | Purpose | Imports |
+|---------|---------|---------|
+| `line_snap_scroll_physics.dart` | `ScrollController` and `ScrollPhysics` that quantize offsets to fixed line boundaries | — |
+| `sticky_hierarchical_scroll.dart` | VS Code–style hierarchical sticky header overlay for flat lists | — |
+| `fixed_line_view.dart` | Virtualized fixed-height line view with active-line tracking and auto-scroll | `line_snap_scroll_physics.dart` |
+| `repl_view.dart` | Two-level REPL scrollback with sticky input headers, coalesced responses, and identity-anchored viewport | `sticky_hierarchical_scroll.dart` |
+| `flutter_scroll_kit.dart` | Exports the four libraries above | all four |
 
-All four target pure Flutter — no third-party runtime dependencies.
-Dev dependencies are limited to `flutter_lints` and `flutter_test`.
+Each primitive's sources live under `lib/src/<primitive>/`, its tests
+under `test/<primitive>/`, and its `SPEC.md` and `REQUIREMENTS.md`
+under `doc/<primitive>/`.
+
+The package targets pure Flutter, with no third-party runtime
+dependencies. Dev dependencies are limited to `flutter_lints` and
+`flutter_test`.
 
 ## Dependency Graph §spec:dependency-graph
 
 *Status: complete*
 
-Implements §req:problem-statement and §req:publication-integrity. The
-graph is shaped by the
-composability requirement: a consumer of one primitive does not pay
-for primitives they do not use.
+Implements §req:success-criteria. A consumer imports only the libraries
+it uses, and tree-shaking keeps the rest out of the built app.
 
 ```text
 line_snap_scroll_physics
@@ -41,62 +45,56 @@ sticky_hierarchical_scroll
 └── repl_view
 ```
 
-Publication order matches topological order: the two dependency-free
-base packages (`line_snap_scroll_physics` and
-`sticky_hierarchical_scroll`) first, their direct consumers
-(`fixed_line_view` and `repl_view`) next. Publishing a package whose
-dependency is not yet on pub.dev fails the resolver, so order is
-load-bearing.
+A library imports another primitive through that primitive's public
+library, `package:flutter_scroll_kit/<primitive>.dart`.
 
 ## Publication Model §spec:publication-model
 
 *Status: complete*
 
-Implements §req:success-criteria and §req:publication-integrity.
-Independent installation, adoption,
-and upgrade all depend on per-package publication with per-package
-versioning.
+Implements §req:packaging and §req:publication-integrity. The package
+publishes to pub.dev under one SemVer track shared by all four
+primitives, with one `CHANGELOG.md`.
 
-Each package publishes to pub.dev under an independent SemVer track.
 Pre-1.0 versions (`0.x.y`) signal "API shapes are stable enough to
 use, but expect breakage until validated by real consumers."
 Version `1.0.0` signals API commitment once at least one external
 consumer has validated the shape.
 
-Packages version independently: a bug fix in `repl_view` does not
-bump `line_snap_scroll_physics`. Each package carries its own
-`CHANGELOG.md` tracking only its own history.
+`dart pub publish --dry-run` is the gate before every publish.
+`.pubignore` keeps build output, generated example platform folders,
+and the Vale styles out of the archive.
 
-`dart pub publish --dry-run` is the gate — each package is
-independently publishable before any is published. Rationale: a
-partially-published dependency graph is harder to recover from than
-a failed dry-run on the first package.
+## Example App §spec:example-app
+
+*Status: complete*
+
+Implements §req:success-criteria. `example/` is one Flutter app with a
+tab per primitive. It depends on the package by path and keeps its own
+`pubspec.lock`. A widget test in `example/test/` opens each tab and
+finds that tab's primitive.
+
+The example carries no platform folders. `flutter create .` in
+`example/` generates them.
 
 ## Development Workflow §spec:development-workflow
 
 *Status: complete*
 
-Implements §req:problem-statement. Maintaining four interdependent
-packages in lockstep during development requires shared workspace
-tooling; contributors working across packages need a single
-resolve step.
+Implements §req:problem-statement. The root is a single Flutter
+package, and `example/` resolves separately because it depends on the
+package by path.
 
-The repository is a Dart workspace (native `resolution: workspace`).
-The root `pubspec.yaml` lists each package and example under
-`workspace:`, and each declares `resolution: workspace`. A single
-`dart pub get` at the root resolves the whole tree against one shared
-lockfile, so a sibling dependency expressed as a hosted version
-constraint (§spec:publication-model) resolves to the local package during development yet
-stays publishable. Examples join the workspace for the same reason:
-each depends on its parent package by path, so the parent's hosted
-sibling constraints resolve locally — not against pub.dev — before
-those siblings are published.
+```sh
+dart pub get && (cd example && dart pub get)
+dart format .
+dart analyze
+flutter test && (cd example && flutter test)
+```
 
-Cross-package checks run as plain SDK commands from the root —
-`dart analyze`, `dart format`, and a per-package `flutter test` — the
-same commands CI runs. No workspace-management wrapper (Melos or
-otherwise) is needed; native workspace support covers bootstrap and
-resolution.
+These are the commands CI runs. Analysis covers both trees, so both
+need resolving first. CI runs every check against two SDKs: the
+`.fvmrc` pin and the Flutter floor in `pubspec.yaml`.
 
 ## Origin and License §spec:origin-and-license
 
@@ -106,48 +104,38 @@ Implements §req:problem-statement. The extraction from rove is the
 mechanism by which the primitives become consumable by projects
 other than rove.
 
-The packages lived as in-tree modules inside
+The primitives lived as in-tree modules inside
 [repentsinner/rove](https://github.com/repentsinner/rove) from
 PR #119 (scroll widget package extraction) until the initial import
 to this repo. Pre-extraction history remains in rove; this repo
 carries per-file history from the extraction onward.
 
+Before `flutter_scroll_kit` 0.1.0, the four primitives published as
+separate pub.dev packages under their own names.
+
 BSD 3-Clause, matching upstream rove.
 
 ## Publication Automation §spec:publication-automation
 
-*Status: complete*
+*Status: not started*
 
-Implements §req:success-criteria and §req:publication-integrity. The
-publication mechanism avoids
-ambient credentials — long-lived tokens stored in repository secrets
-would be readable by every workflow in the repo and would broaden
-the blast radius of any compromise.
+Implements §req:publication-integrity. Flywheel cuts releases from
+conventional commits and pushes a `v<version>` tag on the release
+commit. A tag-triggered workflow publishes that tag to pub.dev.
 
-Publishing is triggered by git tag push events. pub.dev accepts
-automated publication only from tag-triggered workflows, and the
-`<component>-v<version>` tag format release-please already produces
-matches pub.dev's per-package trusted publisher pattern. Merging a
-release-please PR creates the tags; the tags trigger the publishes.
+Each GitHub release carries release builds of the example app for
+Linux, macOS, and Windows, built on each platform's runner when the
+release publishes. The builds are unsigned.
 
 Authentication uses OIDC against pub.dev's trusted publisher
-mechanism — the workflow exchanges a GitHub-signed OIDC token for a
-short-lived pub.dev credential, scoped to one publish. No
-long-lived credentials live in the repo or GitHub secrets. Reference:
+mechanism: the workflow exchanges a GitHub-signed OIDC token for a
+short-lived pub.dev credential, scoped to one publish. No long-lived
+credentials live in the repo or GitHub secrets. Reference:
 [dart.dev/tools/pub/automated-publishing](https://dart.dev/tools/pub/automated-publishing).
 
-Simultaneous releases need care. When release-please bumps multiple
-packages in one PR — most notably on initial publication — all tags
-land in a single push and the per-package publish workflows trigger
-together. A shared `concurrency: pub-publish` group serializes them so
-they never publish in parallel, but does not sequence them
-topologically: a consumer can still run before its dependency is
-indexed and fail resolver lookup. Recovery is a manual re-publish via
-each workflow's `workflow_dispatch`. Subsequent releases rarely hit
-this; release-please only tags packages with version-bumping commits,
-so most releases touch one package in isolation.
-
-One-time human setup that cannot be automated precedes the first
-publication: each package is registered as a trusted publisher on its
-pub.dev Admin page with a matching tag pattern. The pub.dev package
-owner grants this trust; a GitHub App cannot.
+*Why*: pub.dev accepts automated publication only from tag-triggered
+workflows, and only for a package that already exists. The first
+version publishes by hand, and the package's pub.dev Admin page then
+registers this repository as a trusted publisher for the tag pattern
+`v{{version}}`. The pub.dev package owner grants this trust; a GitHub
+App cannot.

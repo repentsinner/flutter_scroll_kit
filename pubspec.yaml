@@ -1,5 +1,18 @@
-name: flutter_scroll_kit_workspace
-publish_to: none
+name: flutter_scroll_kit
+description: >-
+  Composable Flutter scroll primitives: line-snap scroll physics, VS
+  Code-style sticky hierarchical headers, virtualized fixed-height line
+  views, and REPL-style scrollback.
+version: 0.1.0
+homepage: https://github.com/repentsinner/flutter_scroll_kit
+repository: https://github.com/repentsinner/flutter_scroll_kit
+issue_tracker: https://github.com/repentsinner/flutter_scroll_kit/issues
+topics:
+  - scroll
+  - sticky-header
+  - virtualization
+  - list
+  - repl
 
 environment:
   # The Flutter floor follows from the Dart floor: a Flutter release bundles
@@ -9,12 +22,11 @@ environment:
   sdk: ^3.10.0
   flutter: ">=3.38.1"
 
-workspace:
-  - packages/line_snap_scroll_physics
-  - packages/sticky_hierarchical_scroll
-  - packages/fixed_line_view
-  - packages/repl_view
-  - packages/line_snap_scroll_physics/example
-  - packages/sticky_hierarchical_scroll/example
-  - packages/fixed_line_view/example
-  - packages/repl_view/example
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

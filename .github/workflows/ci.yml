@@ -50,8 +50,13 @@ jobs:
           flutter-version: ${{ steps.sdk.outputs.version }}
           cache: true
 
+      # The example depends on the package by path and keeps its own
+      # lockfile, so it resolves separately. Analyze covers both trees and
+      # needs both resolved.
       - name: Install dependencies
-        run: dart pub get
+        run: |
+          dart pub get
+          (cd example && dart pub get)
 
       # dart format output can change between SDK releases, so formatting
       # is held to the toolchain the repo develops on.
@@ -64,16 +69,12 @@ jobs:
       - name: Analyze
         run: dart analyze ${{ matrix.sdk == 'pinned' && '--fatal-infos' || '' }}
 
-      - name: Test
-        run: |
-          set -e
-          for pkg in packages/*/; do
-            if [ -d "$pkg/test" ]; then
-              echo "::group::flutter test $pkg"
-              (cd "$pkg" && flutter test)
-              echo "::endgroup::"
-            fi
-          done
+      - name: Test (package)
+        run: flutter test
+
+      - name: Test (example)
+        working-directory: example
+        run: flutter test
 
   # Keeps the check name the branch has always reported. A matrix job reports
   # one check per leg, so this aggregate is the single result to require.
