@@ -20,26 +20,50 @@ scroll infrastructure.
 
 ## Success criteria §req:success-criteria
 
-- Each primitive is installable on its own via
-  `dart pub add <package>` with no git reference.
-- A consumer can adopt any single primitive without pulling the
-  others they don't use.
-- A fix or breaking change in one primitive does not force
-  consumers of the other three to upgrade or re-pin.
+- All four primitives are installable via
+  `dart pub add flutter_scroll_kit` with no git reference.
+- A consumer can import any single primitive through its own
+  library, and primitives it doesn't import stay out of the built
+  app.
+- A fix in one primitive does not force consumers of the other
+  three to upgrade or re-pin.
 - Rove's `swap-to-pub-dev-deps` workstream — migrating from git
   source deps to pub.dev version deps — unblocks and closes.
 
+## Packaging §req:packaging
+
+- The four primitives shall publish as one pub.dev package,
+  `flutter_scroll_kit`, on one SemVer track.
+- Each primitive shall have its own public library,
+  `package:flutter_scroll_kit/<primitive>.dart`, that exports that
+  primitive's public API.
+- The package should also provide
+  `package:flutter_scroll_kit/flutter_scroll_kit.dart`, which exports
+  all four.
+
+*Why*: the primitives share one version, so a breaking change in one
+primitive moves the version for all four. Below 1.0, a caret
+constraint such as `^0.1.0` excludes the next minor, so a consumer of
+an unchanged primitive has to re-pin to keep receiving its fixes. A
+raised Flutter SDK floor reaches all four primitives the same way.
+This cost is accepted because the primitives are close to their
+stated goals, change rarely, and depend on nothing beyond Flutter, so
+no third-party bump drives a release. Per-primitive libraries keep
+adoption selective at the import level, and tree-shaking keeps unused
+primitives out of the build.
+
+*Rejected*: four independently versioned packages. Each needed its
+own release automation and publish workflow, consumers had to
+publish in dependency order, and pub.dev usage was split across four
+listings.
+
 ## Publication integrity §req:publication-integrity
 
-Independent, per-package publication (§req:success-criteria) holds only
-if the release pipeline preserves three guarantees:
+Publication of the package (§req:packaging) shall preserve two
+guarantees:
 
-- **Topological order.** A package shall not publish before every
-  package it depends on is resolvable on pub.dev. A consumer published
-  ahead of its dependency fails the pub.dev resolver.
-- **Independent publishability.** Each package shall pass
-  `dart pub publish --dry-run` on its own before any package in a
-  release publishes.
+- **Dry-run gate.** The package shall pass
+  `dart pub publish --dry-run` before it publishes.
 - **No ambient credentials.** Publication shall authenticate with
   short-lived, per-publish credentials; the pipeline shall hold no
   long-lived pub.dev tokens in repository secrets.
