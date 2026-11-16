@@ -5,6 +5,14 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.6](https://github.com/repentsinner/flutter_scroll_kit/compare/repl_view-v0.1.5...repl_view-v0.1.6) (2026-11-16)
+
+
+### Features
+
+* **repl_view:** key each row by its entry's identity ([1fc1dc3](https://github.com/repentsinner/flutter_scroll_kit/commit/1fc1dc345c74b460f541dcec99552ec991fd1f40))
+* **repl_view:** key each row by its entry's identity ([77de132](https://github.com/repentsinner/flutter_scroll_kit/commit/77de13294e6e8dd926a0de8d9ff4e0cb1c318d86))
+
 ## [0.1.5](https://github.com/repentsinner/flutter_scroll_kit/compare/repl_view-v0.1.4...repl_view-v0.1.5) (2026-10-06)
 
 
