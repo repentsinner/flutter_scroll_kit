@@ -117,7 +117,7 @@ BSD 3-Clause, matching upstream rove.
 
 ## Publication Automation §spec:publication-automation
 
-*Status: not started*
+*Status: in progress*
 
 Implements §req:publication-integrity. Flywheel cuts releases from
 conventional commits and pushes a `v<version>` tag on the release

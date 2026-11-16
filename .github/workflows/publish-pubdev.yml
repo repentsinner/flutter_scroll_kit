@@ -1,0 +1,41 @@
+# Publishes to pub.dev when Flywheel pushes a release tag.
+#
+# pub.dev's OIDC publishing only accepts workflows triggered by a git
+# tag push (not release: published). Flywheel's App pushes the v* tag
+# pointing at the chore(release) commit, whose pubspec.yaml already
+# carries the matching version — both pub.dev requirements hold by
+# construction.
+#
+# Toolchain: this job does NOT run the pinned SDK. It delegates to
+# dart-lang/setup-dart's reusable workflow, which provisions the pub.dev
+# OIDC token and picks its own Dart and Flutter; the workflow accepts only
+# `environment` and `working-directory`, so there is no input to feed
+# .fvmrc through. Pinning it means inlining the publish steps and owning
+# the OIDC exchange on the release path.
+#
+# That trade is deliberately not taken. This job runs no analyzer and no
+# tests, so it cannot produce the SDK-drift failure .fvmrc exists to stop
+# (a local tree that analyzes clean while CI rejects it). It runs
+# `dart pub publish`, where a newer SDK's stricter validation is a real
+# signal about the package, not drift noise. Inline the steps with
+# subosito/flutter-action + flutter-version-file only if reproducible
+# release builds become worth owning that plumbing.
+#
+# Counterpart configuration:
+# - pub.dev package Admin tab: automated publishing from GitHub Actions
+#   enabled for repentsinner/flutter_scroll_kit, tag pattern v{{version}},
+#   "Require GitHub Actions environment" = pub.dev.
+# - GitHub Settings → Environments → pub.dev (required reviewers
+#   optional — adds an approval click before each publish).
+name: Publish to pub.dev
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+jobs:
+  publish:
+    permissions:
+      id-token: write # required for pub.dev OIDC token exchange
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@2286a0c042b44434fe26d292bbce8d34f7ec662b # v1.8.2
+    with:
+      environment: pub.dev

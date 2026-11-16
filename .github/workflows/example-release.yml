@@ -1,0 +1,93 @@
+# Attaches release builds of the example app to each GitHub release.
+#
+# Flywheel creates the release with its App token, and an App-created
+# release fires `release: published`. Each platform builds on its own
+# runner, because Flutter desktop builds only for the host OS.
+#
+# The example carries no platform folders, so `flutter create` generates
+# them for the one platform each leg builds. The builds are unsigned:
+# macOS Gatekeeper and Windows SmartScreen warn on first launch.
+name: Example release builds
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    permissions:
+      contents: write # gh release upload
+    strategy:
+      # One platform failing leaves the other two worth attaching.
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux
+            runner: ubuntu-latest
+          - platform: macos
+            runner: macos-latest
+          - platform: windows
+            runner: windows-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      TAG: ${{ github.event.release.tag_name }}
+      ASSET_BASE: flutter_scroll_kit_example-${{ github.event.release.tag_name }}-${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      # Builds with the toolchain the repo develops on.
+      - id: sdk
+        name: Resolve SDK version
+        env:
+          MATRIX_SDK: pinned
+        run: .github/scripts/resolve-sdk.sh
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          flutter-version: ${{ steps.sdk.outputs.version }}
+          cache: true
+
+      # Linux desktop toolchain: https://docs.flutter.dev/platform-integration/linux/setup
+      - name: Install Linux build dependencies
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev
+
+      - name: Build
+        working-directory: example
+        run: |
+          flutter create --platforms=${{ matrix.platform }} .
+          flutter build ${{ matrix.platform }} --release
+
+      - name: Archive (linux)
+        if: matrix.platform == 'linux'
+        run: tar -czf "$ASSET_BASE-x64.tar.gz" -C example/build/linux/x64/release bundle
+      - name: Archive (macos)
+        if: matrix.platform == 'macos'
+        run: |
+          ditto -c -k --keepParent \
+            example/build/macos/Build/Products/Release/flutter_scroll_kit_example.app \
+            "$ASSET_BASE.zip"
+      - name: Archive (windows)
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path example/build/windows/x64/runner/Release/* `
+            -DestinationPath "$env:ASSET_BASE-x64.zip"
+
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$TAG" "$ASSET_BASE"* --clobber
