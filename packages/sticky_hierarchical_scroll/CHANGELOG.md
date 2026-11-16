@@ -5,6 +5,14 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5](https://github.com/repentsinner/flutter_scroll_kit/compare/sticky_hierarchical_scroll-v0.1.4...sticky_hierarchical_scroll-v0.1.5) (2026-11-16)
+
+
+### Features
+
+* **sticky_hierarchical_scroll:** key rows by item identity ([c71d780](https://github.com/repentsinner/flutter_scroll_kit/commit/c71d780b278362249ffaad438063286993fa24c0))
+* **sticky_hierarchical_scroll:** key rows by item identity ([e1f6104](https://github.com/repentsinner/flutter_scroll_kit/commit/e1f6104869c314c915b3e6417fe87e5b7ac3dd7e))
+
 ## [0.1.4](https://github.com/repentsinner/flutter_scroll_kit/compare/sticky_hierarchical_scroll-v0.1.3...sticky_hierarchical_scroll-v0.1.4) (2026-10-06)
 
 
