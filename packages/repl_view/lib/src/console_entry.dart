@@ -37,7 +37,8 @@ abstract class ConsoleEntry {
   /// has scrolled away from the bottom: if the anchored entry still
   /// appears in the next entry list, the viewport is restored to it;
   /// if the anchor has been trimmed out of the scrollback, the view
-  /// snaps back to the bottom.
+  /// snaps back to the bottom. It also keys each row, so an eviction
+  /// moves rows rather than rebuilding them; identities must be unique.
   ///
   /// Equality is compared with `==`. Consumers typically use a
   /// monotonic integer assigned when the underlying message is created

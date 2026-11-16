@@ -612,4 +612,75 @@ void main() {
       },
     );
   });
+
+  group('ReplView row identity', () {
+    testWidgets('evicting the oldest entry keeps every other row\'s element', (
+      tester,
+    ) async {
+      var entries = <_Entry>[
+        for (int i = 0; i < 10; i++) _Entry.response('line $i', id: i),
+      ];
+      final states = <String, State>{};
+
+      late StateSetter setOuter;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) {
+                setOuter = setState;
+                return SizedBox(
+                  height: 400,
+                  child: ReplView<_Entry>(
+                    entries: entries,
+                    itemExtent: 16.0,
+                    entryBuilder: (context, entry) =>
+                        _StateProbe(entry.value, states),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+      final before = Map.of(states);
+
+      // A full scrollback evicts its oldest line as a new one arrives.
+      setOuter(
+        () => entries = [
+          ...entries.sublist(1),
+          _Entry.response('line 10', id: 10),
+        ],
+      );
+      await tester.pump();
+
+      for (int i = 1; i < 10; i++) {
+        expect(
+          identical(states['line $i'], before['line $i']),
+          isTrue,
+          reason: 'line $i must keep its element across the eviction',
+        );
+      }
+    });
+  });
+}
+
+/// Row that records the [State] showing each value, so a test can tell
+/// whether a row kept its element.
+class _StateProbe extends StatefulWidget {
+  const _StateProbe(this.value, this.states);
+
+  final String value;
+  final Map<String, State> states;
+
+  @override
+  State<_StateProbe> createState() => _StateProbeState();
+}
+
+class _StateProbeState extends State<_StateProbe> {
+  @override
+  Widget build(BuildContext context) {
+    widget.states[widget.value] = this;
+    return Text(widget.value);
+  }
 }
