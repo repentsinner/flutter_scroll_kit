@@ -130,6 +130,25 @@ bottom of the stream.
 
 ---
 
+## Item Keys §spec:shs-item-keys
+
+*Status: complete*
+
+Rows are positional by default: inserting or removing an item shifts
+every later index, so each shifted row takes another item's element and
+rebuilds. A stream that evicts its oldest item on every append rebuilds
+every visible row per append.
+
+`itemKey` returns an item's identity. When set, each row is keyed by it
+and `findChildIndexCallback` resolves the key to the item's current
+index, so a shifted row keeps its element and only rows whose item is
+new build. Identities shall be unique within `items`. The identity
+index is rebuilt when `items` is replaced, so a consumer shall pass a
+new list rather than mutate the old one, as the sticky model already
+requires.
+
+---
+
 ## API Surface §spec:shs-api-surface
 
 *Status: complete*
@@ -164,6 +183,7 @@ class StickyHierarchicalScrollView<T> extends StatefulWidget {
     ScrollController? controller,
     ScrollPhysics? physics,
     void Function(int)? onStickyHeaderTap,
+    Object Function(T)? itemKey,   // §spec:shs-item-keys
     int trailingItemCount,
     Widget Function(BuildContext, int)? trailingItemBuilder,
     double? scrollbarGutter,   // null → auto from theme; 0 → disabled
@@ -265,6 +285,8 @@ Unit tests cover:
 - Trailing-item key stability: prepending a data item shifts trailing
   indices yet a trailing widget retains its element identity (a focused
   `TextField` keeps focus) via the negative-key `findChildIndexCallback`.
+- Item key stability: with `itemKey` set, removing the first item keeps
+  every remaining row's element.
 - Decoration: the pinned header renders inside a `DecoratedBox` carrying
   the configured `stickyDecoration`.
 
