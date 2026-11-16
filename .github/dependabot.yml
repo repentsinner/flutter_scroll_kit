@@ -12,12 +12,12 @@ updates:
       github-actions:
         patterns: ["*"]
 
-  # Dart 3.6+ workspace: dependency_services rejects per-package
-  # invocations with "Only apply dependency_services to the root of
-  # the workspace." The root entry covers all workspace members via
-  # the shared pubspec.lock.
+  # The example depends on the package by path and keeps its own
+  # pubspec, so it needs an entry of its own.
   - package-ecosystem: pub
-    directory: /
+    directories:
+      - /
+      - /example
     schedule:
       interval: weekly
     labels:
