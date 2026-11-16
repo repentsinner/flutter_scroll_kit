@@ -51,6 +51,7 @@ StickyHierarchicalScrollView<MyItem>(
 | `controller` | Optional external `ScrollController` |
 | `physics` | Scroll physics (default: platform default) |
 | `onStickyHeaderTap` | Custom tap handler (overrides default scroll-to) |
+| `itemKey` | Optional unique, stable identity of an item. When set, rows follow their item when the list shifts instead of rebuilding |
 
 ### StickyScrollConfig
 

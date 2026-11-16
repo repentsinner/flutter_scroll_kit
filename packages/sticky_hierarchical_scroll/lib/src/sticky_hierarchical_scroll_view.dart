@@ -58,6 +58,15 @@ class StickyHierarchicalScrollView<T> extends StatefulWidget {
   /// Callback when a sticky header is tapped.
   final void Function(int index)? onStickyHeaderTap;
 
+  /// Stable identity of an item across list changes. When set, each row
+  /// is keyed by it so an insert or eviction moves row elements instead
+  /// of rebuilding every row whose index shifted.
+  ///
+  /// Identities must be unique within [items]. The identity index is
+  /// rebuilt when [items] is replaced, so pass a new list rather than
+  /// mutating the old one.
+  final Object Function(T item)? itemKey;
+
   /// Number of trailing items appended after [items]. These items
   /// are not part of the sticky model — they just scroll with the
   /// list. Useful for inline input areas or footers that should
@@ -94,6 +103,7 @@ class StickyHierarchicalScrollView<T> extends StatefulWidget {
     this.controller,
     this.physics,
     this.onStickyHeaderTap,
+    this.itemKey,
     this.trailingItemCount = 0,
     this.trailingItemBuilder,
     this.scrollbarGutter,
@@ -118,6 +128,7 @@ class StickyHierarchicalScrollView<T> extends StatefulWidget {
     this.controller,
     this.physics,
     this.onStickyHeaderTap,
+    this.itemKey,
     this.trailingItemCount = 0,
     this.trailingItemBuilder,
     this.scrollbarGutter,
@@ -558,6 +569,23 @@ class _StickyHierarchicalScrollViewState<T>
     );
   }
 
+  // Index of each item identity, rebuilt lazily once per items list.
+  Map<Object, int>? _identityIndex;
+  List<T>? _identityIndexOf;
+
+  int? _indexOfIdentity(Object identity) {
+    final itemKey = widget.itemKey;
+    if (itemKey == null) return null;
+    if (!identical(_identityIndexOf, widget.items)) {
+      _identityIndexOf = widget.items;
+      _identityIndex = {
+        for (var i = 0; i < widget.items.length; i++)
+          itemKey(widget.items[i]): i,
+      };
+    }
+    return _identityIndex![identity];
+  }
+
   @override
   Widget build(BuildContext context) {
     final gutter = _resolveScrollbarGutter();
@@ -600,8 +628,12 @@ class _StickyHierarchicalScrollViewState<T>
               // Without this, adding a data item shifts all trailing
               // indices, causing ListView to dispose and recreate
               // trailing widgets (losing TextField focus, etc.).
-              findChildIndexCallback: widget.trailingItemCount > 0
+              findChildIndexCallback:
+                  widget.trailingItemCount > 0 || widget.itemKey != null
                   ? (Key key) {
+                      if (key case _ItemKey(:final identity)) {
+                        return _indexOfIdentity(identity);
+                      }
                       if (key case ValueKey<int>(value: final v) when v < 0) {
                         // Negative keys encode trailing index:
                         // -1 → trailing 0, -2 → trailing 1, etc.
@@ -612,11 +644,11 @@ class _StickyHierarchicalScrollViewState<T>
                   : null,
               itemBuilder: (context, index) {
                 if (index < widget.items.length) {
-                  return widget.itemBuilder(
-                    context,
-                    widget.items[index],
-                    index,
-                  );
+                  final item = widget.items[index];
+                  final row = widget.itemBuilder(context, item, index);
+                  final itemKey = widget.itemKey;
+                  if (itemKey == null) return row;
+                  return KeyedSubtree(key: _ItemKey(itemKey(item)), child: row);
                 }
                 // Trailing items keyed for stable identity.
                 final trailingIndex = index - widget.items.length;
@@ -649,4 +681,15 @@ class _StickyHierarchicalScrollViewState<T>
       ),
     );
   }
+}
+
+/// Row key wrapping an item identity, distinct from the trailing keys.
+class _ItemKey extends LocalKey {
+  const _ItemKey(this.identity);
+  final Object identity;
+  @override
+  bool operator ==(Object other) =>
+      other is _ItemKey && other.identity == identity;
+  @override
+  int get hashCode => identity.hashCode;
 }

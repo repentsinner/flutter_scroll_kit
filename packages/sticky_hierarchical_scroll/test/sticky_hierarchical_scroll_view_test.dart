@@ -870,4 +870,81 @@ void main() {
       );
     });
   });
+
+  group('Item key stability', () {
+    testWidgets('evicting the first item keeps every other row\'s element', (
+      tester,
+    ) async {
+      var items = <_TestItem>[
+        const _TestItem('Section A', 0, isSection: true),
+        for (int i = 1; i <= 10; i++) _TestItem('item $i', 1),
+      ];
+      final states = <String, State>{};
+
+      late StateSetter setOuter;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) {
+                setOuter = setState;
+                return SizedBox(
+                  height: 400,
+                  width: 300,
+                  child: StickyHierarchicalScrollView<_TestItem>(
+                    items: items,
+                    getLevel: (item) => item.level,
+                    isSection: (item) => item.isSection,
+                    itemExtent: 20.0,
+                    itemKey: (item) => item.name,
+                    itemBuilder: (context, item, index) =>
+                        _StateProbe(item.name, states),
+                    config: StickyScrollConfig<_TestItem>(
+                      stickyHeaderBuilder: (context, candidate) =>
+                          Text(candidate.data.name),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+      final before = Map.of(states);
+
+      // Dropping the first item shifts every remaining row up one index.
+      // Keyed rows follow their item; positional rows would each take
+      // their successor's element.
+      setOuter(() => items = items.sublist(1));
+      await tester.pump();
+
+      for (int i = 1; i <= 10; i++) {
+        expect(
+          identical(states['item $i'], before['item $i']),
+          isTrue,
+          reason: 'item $i must keep its element across the index shift',
+        );
+      }
+    });
+  });
+}
+
+/// Row that records the [State] showing each name, so a test can tell
+/// whether a row kept its element.
+class _StateProbe extends StatefulWidget {
+  const _StateProbe(this.name, this.states);
+
+  final String name;
+  final Map<String, State> states;
+
+  @override
+  State<_StateProbe> createState() => _StateProbeState();
+}
+
+class _StateProbeState extends State<_StateProbe> {
+  @override
+  Widget build(BuildContext context) {
+    widget.states[widget.name] = this;
+    return Text(widget.name);
+  }
 }
