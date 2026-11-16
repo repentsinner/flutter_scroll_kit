@@ -297,6 +297,7 @@ class _ReplViewState<T extends ConsoleEntry> extends State<ReplView<T>> {
         trailingItemCount: widget.trailingItemCount,
         trailingItemBuilder: widget.trailingItemBuilder,
         scrollbarGutter: widget.scrollbarGutter,
+        itemKey: (entry) => entry.identity,
         itemBuilder: (context, entry, _) => widget.entryBuilder(context, entry),
         config: StickyScrollConfig<T>(
           maxStickyHeaders: widget.maxStickyHeaders,

@@ -26,7 +26,10 @@ abstract class ConsoleEntry {
 section at level 0 and all following non-input entries belong to its
 scope until the next input arrives.
 
-`identity` is the scroll anchor (§spec:repl-viewport-state). Consumers typically use a
+`identity` is the scroll anchor (§spec:repl-viewport-state) and the
+row key: `ReplView` passes it as the sticky view's `itemKey`, so an
+eviction or append moves existing rows instead of rebuilding them.
+Identities shall be unique within `entries`. Consumers typically use a
 monotonic integer assigned when the message is created and preserved
 across coalescing updates.
 
@@ -156,6 +159,8 @@ Unit tests cover:
   - Drag back to bottom → stuck.
   - Anchor entry removed → snap to bottom, re-enter stuck.
 - Trailing rows render after `entries`.
+- Row identity: evicting the oldest entry keeps every remaining row's
+  element.
 - Sticky input pinning: an input scrolled above the viewport top pins
   its `entryBuilder` widget at the viewport top via the sticky overlay.
 - Empty-entries render path: an empty `entries` list builds the sticky
