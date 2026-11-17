@@ -56,14 +56,15 @@ jobs:
           flutter-version: ${{ steps.sdk.outputs.version }}
           cache: true
       # The example depends on the package by path and keeps its own
-      # lockfile, so it resolves separately. It builds on material_ui,
+      # lockfile, so it resolves separately (`--no-example` stops the root
+      # pub get from resolving it too). It builds on material_ui,
       # which needs a newer Flutter than the package floor, so only the
       # pinned leg resolves and analyzes it.
       - name: Install dependencies
         env:
           MATRIX_SDK: ${{ matrix.sdk }}
         run: |
-          flutter pub get
+          flutter pub get --no-example
           if [ "$MATRIX_SDK" = pinned ]; then (cd example && flutter pub get); fi
       # dart format output can change between SDK releases, so formatting
       # is held to the toolchain the repo develops on.
@@ -100,7 +101,7 @@ jobs:
           cache: true
       - name: Test (package)
         run: |
-          flutter pub get
+          flutter pub get --no-example
           flutter test
 
   test-example:
