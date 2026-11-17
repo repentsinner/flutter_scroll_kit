@@ -111,17 +111,21 @@ to this repo. Pre-extraction history remains in rove; this repo
 carries per-file history from the extraction onward.
 
 Before `flutter_scroll_kit` 0.1.0, the four primitives published as
-separate pub.dev packages under their own names.
+separate pub.dev packages under their own names. Those packages are
+discontinued on pub.dev, with `flutter_scroll_kit` as the suggested
+replacement.
 
 BSD 3-Clause, matching upstream rove.
 
 ## Publication Automation §spec:publication-automation
 
-*Status: in progress*
+*Status: complete*
 
 Implements §req:publication-integrity. Flywheel cuts releases from
 conventional commits and pushes a `v<version>` tag on the release
-commit. A tag-triggered workflow publishes that tag to pub.dev.
+commit. A tag-triggered workflow publishes that tag to pub.dev, through
+the `pub.dev` GitHub environment, which holds each publish for a
+maintainer's approval.
 
 Each GitHub release carries release builds of the example app for
 Linux, macOS, and Windows, built on each platform's runner from the
