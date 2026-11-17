@@ -4,6 +4,10 @@ flywheel:
       branches:
         - name: main
           release: production
+          # Immutable releases freeze assets once a release publishes, so
+          # Flywheel leaves it as a draft. example-release.yml attaches the
+          # example builds and publishes it.
+          release_as_draft: true
           # Non-bumping types auto-merge once required checks pass.
           # feat / fix / perf / any `!` breaking variant routes to
           # human review — every release stays human-gated.

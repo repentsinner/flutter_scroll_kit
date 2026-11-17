@@ -1,17 +1,24 @@
-# Attaches release builds of the example app to each GitHub release.
+# Attaches release builds of the example app to each GitHub release, then
+# publishes the release.
 #
-# Flywheel creates the release with its App token, and an App-created
-# release fires `release: published`. Each platform builds on its own
-# runner, because Flutter desktop builds only for the host OS.
+# The repository uses immutable releases, which freeze a release's assets
+# once it publishes. Flywheel therefore leaves each release as a draft
+# (`release_as_draft` in .flywheel.yml). GitHub fires no release events for
+# a draft, so this workflow runs on the tag push, attaches the builds to
+# the draft, and publishes it as its last step. If a build fails, the
+# release stays a draft; re-running the failed job completes it.
 #
-# The example carries no platform folders, so `flutter create` generates
-# them for the one platform each leg builds. The builds are unsigned:
-# macOS Gatekeeper and Windows SmartScreen warn on first launch.
+# Each platform builds on its own runner, because Flutter desktop builds
+# only for the host OS. The example carries no platform folders, so
+# `flutter create` generates them for the one platform each leg builds.
+# The builds are unsigned: macOS Gatekeeper and Windows SmartScreen warn on
+# first launch.
 name: Example release builds
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
 
 permissions:
   contents: read
@@ -23,7 +30,8 @@ jobs:
     permissions:
       contents: write # gh release upload
     strategy:
-      # One platform failing leaves the other two worth attaching.
+      # One platform failing still leaves the other two worth building, and
+      # the release stays a draft until every platform attaches.
       fail-fast: false
       matrix:
         include:
@@ -37,13 +45,11 @@ jobs:
       run:
         shell: bash
     env:
-      TAG: ${{ github.event.release.tag_name }}
-      ASSET_BASE: flutter_scroll_kit_example-${{ github.event.release.tag_name }}-${{ matrix.platform }}
+      TAG: ${{ github.ref_name }}
+      ASSET_BASE: flutter_scroll_kit_example-${{ github.ref_name }}-${{ matrix.platform }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.event.release.tag_name }}
 
       # Builds with the toolchain the repo develops on.
       - id: sdk
@@ -87,7 +93,27 @@ jobs:
           Compress-Archive -Path example/build/windows/x64/runner/Release/* `
             -DestinationPath "$env:ASSET_BASE-x64.zip"
 
-      - name: Upload to release
+      # Flywheel pushes the tag a moment before it creates the draft, so the
+      # upload waits for the draft to exist.
+      - name: Upload to the draft release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$TAG" "$ASSET_BASE"* --clobber
+        run: |
+          for _ in $(seq 1 24); do
+            gh release view "$TAG" >/dev/null 2>&1 && break
+            sleep 5
+          done
+          gh release upload "$TAG" "$ASSET_BASE"* --clobber
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # gh release edit
+    steps:
+      # Publishing freezes the release and its assets.
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false
