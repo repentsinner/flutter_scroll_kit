@@ -48,6 +48,35 @@ sticky_hierarchical_scroll
 A library imports another primitive through that primitive's public
 library, `package:flutter_scroll_kit/<primitive>.dart`.
 
+## Framework Dependency §spec:framework-dependency
+
+*Status: not started*
+
+Implements §req:packaging. Every library imports Flutter through
+`package:flutter/widgets.dart` and its lower layers. No library imports
+`package:flutter/material.dart` or `package:flutter/cupertino.dart`, so
+the primitives run under any app root: `MaterialApp`, `CupertinoApp`, a
+plain `WidgetsApp`, or a design system that ships its own app widget,
+such as `material_ui`.
+
+- *Selection.* `FixedLineView(selectable: true)` builds selection from
+  the widgets layer, so it needs no localizations from a design system.
+  A consumer that wants its design system's handles and context menu
+  leaves `selectable` off and wraps the view in that system's
+  selection widget.
+- *Scrollbar.* `StickyHierarchicalScrollView` asks the ambient
+  `ScrollBehavior` to build its scrollbar, so the host app's design
+  system draws it.
+- *Gutter width.* With `scrollbarGutter` null, the gutter defaults to a
+  documented constant equal to the Material scrollbar thickness.
+  Consumers whose scrollbar is wider or narrower pass the width.
+
+*Why*: each primitive sits under a host app's design system. Importing
+one design system's library binds its lookups to that system's
+`Localizations` and theme types, which apps on another root don't
+provide. `SelectionArea` then throws, and theme lookups fall back to
+defaults without warning. Reported in #67.
+
 ## Publication Model §spec:publication-model
 
 *Status: complete*
