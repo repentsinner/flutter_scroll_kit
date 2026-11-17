@@ -3,7 +3,7 @@ description: >-
   Composable Flutter scroll primitives: line-snap scroll physics, VS
   Code-style sticky hierarchical headers, virtualized fixed-height line
   views, and REPL-style scrollback.
-version: 0.1.1
+version: 0.2.0
 homepage: https://github.com/repentsinner/flutter_scroll_kit
 repository: https://github.com/repentsinner/flutter_scroll_kit
 issue_tracker: https://github.com/repentsinner/flutter_scroll_kit/issues
