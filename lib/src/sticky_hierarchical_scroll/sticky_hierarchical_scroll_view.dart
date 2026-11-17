@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show SliverLayoutDimensions;
+import 'package:flutter/widgets.dart';
 
 import 'sticky_candidate.dart';
 import 'sticky_scroll_config.dart';
@@ -20,6 +20,14 @@ import 'sticky_scroll_config.dart';
 ///   cumulative offset table enables O(log n) position lookups.
 ///   Flutter's `itemExtentBuilder` drives layout performance.
 class StickyHierarchicalScrollView<T> extends StatefulWidget {
+  /// Gutter width reserved when [scrollbarGutter] is null: 8.0, the
+  /// thickness of the Material desktop scrollbar.
+  ///
+  /// The view builds on the widgets layer, which carries no scrollbar
+  /// theme, so it can't read the host's thickness. Pass [scrollbarGutter]
+  /// when the host's scrollbar is wider or narrower.
+  static const double defaultScrollbarGutter = 8.0;
+
   /// Items to display.
   final List<T> items;
 
@@ -84,9 +92,7 @@ class StickyHierarchicalScrollView<T> extends StatefulWidget {
   /// targets clear of the scrollbar thumb. The gutter is static — present
   /// in every layout state regardless of whether the thumb is painted.
   ///
-  /// - `null` (default): auto-derive from the effective
-  ///   [ScrollbarThemeData.thickness], falling back to the Material
-  ///   default (8.0) when the theme leaves it unset.
+  /// - `null` (default): reserve [defaultScrollbarGutter].
   /// - `0`: disable the gutter for full-bleed content.
   /// - positive: reserve exactly that width.
   final double? scrollbarGutter;
@@ -512,20 +518,9 @@ class _StickyHierarchicalScrollViewState<T>
 
   // -- Rendering --
 
-  /// Material default scrollbar thickness, used when the theme leaves
-  /// [ScrollbarThemeData.thickness] unset. Mirrors the Material
-  /// `Scrollbar` desktop/web default.
-  static const double _kDefaultScrollbarThickness = 8.0;
-
-  /// Trailing gutter width to reserve for the scrollbar lane.
-  ///
-  /// `null` auto-derives from the effective [ScrollbarThemeData.thickness]
-  /// (the same source the wrapping [Scrollbar] renders from), falling back
-  /// to [_kDefaultScrollbarThickness].
   double _resolveScrollbarGutter() =>
       widget.scrollbarGutter ??
-      ScrollbarTheme.of(context).thickness?.resolve(const <WidgetState>{}) ??
-      _kDefaultScrollbarThickness;
+      StickyHierarchicalScrollView.defaultScrollbarGutter;
 
   /// Build a single sticky header widget at [top] position.
   Widget _buildHeaderWidget(StickyCandidate<T> header, double top) {
@@ -589,14 +584,17 @@ class _StickyHierarchicalScrollViewState<T>
   @override
   Widget build(BuildContext context) {
     final gutter = _resolveScrollbarGutter();
-    return Scrollbar(
-      controller: _scrollController,
-      child: Stack(
+    final behavior = ScrollConfiguration.of(context);
+    // The scrollbar wraps the overlay as well as the list, so the thumb
+    // paints above pinned headers. The host's ScrollBehavior builds it,
+    // which lets the host's design system draw it, and the inner list
+    // turns its own scrollbar off so only one shows.
+    return behavior.buildScrollbar(
+      context,
+      Stack(
         children: [
           ScrollConfiguration(
-            behavior: ScrollConfiguration.of(
-              context,
-            ).copyWith(scrollbars: false),
+            behavior: behavior.copyWith(scrollbars: false),
             child: ListView.builder(
               controller: _scrollController,
               itemCount: widget.items.length + widget.trailingItemCount,
@@ -678,6 +676,10 @@ class _StickyHierarchicalScrollViewState<T>
             ),
           ),
         ],
+      ),
+      ScrollableDetails(
+        direction: AxisDirection.down,
+        controller: _scrollController,
       ),
     );
   }

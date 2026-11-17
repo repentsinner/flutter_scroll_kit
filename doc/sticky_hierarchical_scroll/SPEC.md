@@ -219,24 +219,33 @@ trailing edge — trailing text is clipped under the thumb and, on
 desktop, the interactive scrollbar intercepts pointer events so a
 trailing `IconButton` there cannot be tapped. Reported in #31.
 
-`scrollbarGutter` (`double?`) sets the width: `null` (default)
-auto-derives from the effective `ScrollbarThemeData.thickness`, with the
-Material default as fallback; `0` disables the gutter for full-bleed
+`scrollbarGutter` (`double?`) sets the width: `null` (default) reserves
+`StickyHierarchicalScrollView.defaultScrollbarGutter`, 8.0, the Material
+desktop scrollbar thickness; `0` disables the gutter for full-bleed
 content; a positive value reserves exactly that width.
+
+The scrollbar itself comes from the ambient `ScrollBehavior`: the view
+passes its list and overlay to `ScrollBehavior.buildScrollbar`, so the
+thumb paints above pinned headers and the host app's design system
+draws it (§spec:framework-dependency). Material's and Cupertino's
+behaviors build no scrollbar on mobile, so there the view shows none.
 
 The gutter is **static and uniform** — reserved in every layout state on
 every platform, independent of whether the thumb is painted:
 
-- *Static, not visibility-gated.* The Material `Scrollbar` is transient
-  (iOS, Android, macOS). Reserving only while the thumb shows reflows
-  content on every fade. Static reservation stays stable.
+- *Static, not visibility-gated.* Scrollbars fade on several platforms.
+  Reserving only while the thumb shows reflows content on every fade.
+  Static reservation stays stable.
 - *Uniform, not platform-gated.* The thumb occludes the lane wherever it
   appears; desktop adds pointer interception on top. One reservation
   covers both.
 
-Auto-deriving from the theme thickness (the same source the wrapping
-`Scrollbar` renders from) keeps the reservation tracking the configured
-scrollbar width rather than a guessed constant.
+*Why a constant default*: scrollbar thickness lives only in each design
+system's theme, and the widgets layer reads none of them. A host whose
+scrollbar differs from 8.0 passes its width. Deriving the default from
+`flutter/material`'s `ScrollbarTheme` was rejected: it bound the view to
+one design system, and under any other root it fell back to 8.0 without
+warning.
 
 Alternatives rejected:
 

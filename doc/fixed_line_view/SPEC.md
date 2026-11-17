@@ -16,7 +16,7 @@ Implements §req:flv-problem, §req:flv-scope, and §req:flv-behavior.
 **`FixedLineView`** renders a flat list of `lineCount` items via
 `lineBuilder(context, index)`. Callers drive `activeLineIndex` and
 `autoScroll` (`none` / `center` / `bottom`). Optional `selectable`
-wraps in a `SelectionArea` for cross-line text selection.
+wraps in a widgets-layer `SelectableRegion` for cross-line text selection.
 
 **`StreamLineView<T>`** wraps `FixedLineView` for stream-driven
 content. Subscribes to `itemStream`, appends items to an internal
@@ -154,30 +154,29 @@ forwards the parameter to the `FixedLineView` it wraps, so both views
 share one rule.
 
 `scrollbarGutter` inherits the §spec:shs-scrollbar-gutter contract
-verbatim: `double?`, `null` (default) auto-derives from the effective
-`ScrollbarThemeData.thickness` with the Material default as fallback, `0`
-disables the gutter, a positive value reserves exactly that width — a
-**static, uniform** reservation present in every layout state on every
-platform, not gated on thumb visibility. A consumer that sets the gutter
-on a `FixedLineView` and a `StickyHierarchicalScrollView` meets one
-trailing-edge rule, not two, because both derive the width from the same
-theme.
+verbatim: `double?`, `null` (default) reserves
+`FixedLineView.defaultScrollbarGutter`, 8.0, `0` disables the gutter, a
+positive value reserves exactly that width — a **static, uniform**
+reservation present in every layout state on every platform, not gated
+on thumb visibility. A consumer that sets the gutter on a
+`FixedLineView` and a `StickyHierarchicalScrollView` meets one
+trailing-edge rule, not two, because both default to the same constant.
 
-Unlike the sticky view, `FixedLineView` does not render its own
-`Scrollbar` — it reserves the gutter as a trailing `ListView` padding
-inset and leaves the bar to the ambient `ScrollBehavior`, which paints
-into the reserved strip. Two reasons:
+Unlike the sticky view, `FixedLineView` builds no scrollbar wrapper. It
+reserves the gutter as a trailing `ListView` padding inset, and the
+ambient `ScrollBehavior` paints the bar into the reserved strip through
+the list's own `Scrollable`. Two reasons:
 
 - *Composition* (§spec:flv-composition): `FixedLineView` and
   `StickyHierarchicalScrollView` share one `ScrollController`, and the
-  sticky view already owns a `Scrollbar`. A second `Scrollbar` in the
-  line view would paint two bars over the same scroll position.
+  sticky view already wraps itself in a scrollbar. A second wrapper in
+  the line view would paint two bars over the same scroll position.
 - *Minimal chrome:* the line view delegates scrollbar rendering to the
   ambient behavior; a padding inset adds the gutter without taking
   ownership of the bar.
 
-Owning a `Scrollbar` here was rejected: it reintroduces the double-bar
-hazard, and shared `ScrollbarThemeData` already guarantees alignment.
+Wrapping the line view in its own scrollbar was rejected: it
+reintroduces the double-bar hazard.
 The gutter costs horizontal space on every platform; full-bleed
 consumers opt out with `scrollbarGutter: 0`.
 
@@ -197,7 +196,7 @@ Unit tests cover:
   head; the stream subscription is cancelled on dispose.
 - Controller ownership: the widget disposes its internal controller,
   never a consumer-supplied one.
-- Rendering: item count, `emptyBuilder` fallback, and `SelectionArea`
+- Rendering: item count, `emptyBuilder` fallback, and `SelectableRegion`
   wrapping under `selectable`.
 - Virtualization bound: a 10000-line list builds only the visible
   window plus `ListView`'s cache extent — never the trailing index.

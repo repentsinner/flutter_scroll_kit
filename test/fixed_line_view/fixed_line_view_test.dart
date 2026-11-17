@@ -376,7 +376,7 @@ void main() {
       expect(controller.hasClients, isTrue);
     });
 
-    testWidgets('wraps in SelectionArea when selectable is true', (
+    testWidgets('wraps in SelectableRegion when selectable is true', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -390,11 +390,11 @@ void main() {
         ),
       );
 
-      expect(find.byType(SelectionArea), findsOneWidget);
+      expect(find.byType(SelectableRegion), findsOneWidget);
       expect(find.text('Line 0'), findsOneWidget);
     });
 
-    testWidgets('no SelectionArea when selectable is false', (tester) async {
+    testWidgets('no SelectableRegion when selectable is false', (tester) async {
       await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
@@ -406,7 +406,7 @@ void main() {
         ),
       );
 
-      expect(find.byType(SelectionArea), findsNothing);
+      expect(find.byType(SelectableRegion), findsNothing);
     });
 
     testWidgets(

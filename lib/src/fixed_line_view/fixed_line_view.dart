@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_scroll_kit/line_snap_scroll_physics.dart';
 
 import 'auto_scroll_behavior.dart';
@@ -9,7 +9,7 @@ import 'auto_scroll_behavior.dart';
 ///
 /// Wraps [ListView.builder] with support for active line tracking and
 /// configurable auto-scroll behaviors. When [selectable] is true, wraps
-/// in a [SelectionArea] for cross-line text selection.
+/// in a [SelectableRegion] for cross-line text selection.
 class FixedLineView extends StatefulWidget {
   /// Creates a [FixedLineView].
   const FixedLineView({
@@ -31,6 +31,14 @@ class FixedLineView extends StatefulWidget {
          'scrollbarGutter must be null or a non-negative width '
          '(>= 0 also rejects NaN)',
        );
+
+  /// Gutter width reserved when [scrollbarGutter] is null: 8.0, the
+  /// thickness of the Material desktop scrollbar.
+  ///
+  /// The view builds on the widgets layer, which carries no scrollbar
+  /// theme, so it can't read the host's thickness. Pass [scrollbarGutter]
+  /// when the host's scrollbar is wider or narrower.
+  static const double defaultScrollbarGutter = 8.0;
 
   /// Total number of lines.
   final int lineCount;
@@ -58,8 +66,12 @@ class FixedLineView extends StatefulWidget {
 
   /// Whether to enable multi-line text selection.
   ///
-  /// When true, wraps the list in a [SelectionArea] so the user can
-  /// click-drag across multiple lines to select text.
+  /// When true, wraps the list in a [SelectableRegion] so the user can
+  /// click-drag across multiple lines to select text and copy it with the
+  /// keyboard. The region shows no selection handles or context menu,
+  /// because those come from a design system. For them, leave this false
+  /// and wrap the view in the host design system's selection widget, such
+  /// as `SelectionArea`; the lines join any enclosing selection region.
   final bool selectable;
 
   /// Selection highlight color used when [selectable] is true.
@@ -86,13 +98,10 @@ class FixedLineView extends StatefulWidget {
   /// Inset as a trailing [ListView] padding so line content and trailing
   /// tap targets stay clear of the ambient scrollbar thumb. The gutter is
   /// static — present in every layout state regardless of whether the thumb
-  /// is painted. [FixedLineView] does not render its own [Scrollbar]; it
-  /// leaves the bar to the ambient [ScrollBehavior], which paints into the
-  /// reserved strip.
+  /// is painted. [FixedLineView] leaves the scrollbar to the ambient
+  /// [ScrollBehavior], which paints into the reserved strip.
   ///
-  /// - `null` (default): auto-derive from the effective
-  ///   [ScrollbarThemeData.thickness], falling back to the Material
-  ///   default (8.0) when the theme leaves it unset.
+  /// - `null` (default): reserve [defaultScrollbarGutter].
   /// - `0`: disable the gutter for full-bleed content.
   /// - positive: reserve exactly that width.
   final double? scrollbarGutter;
@@ -259,20 +268,8 @@ class _FixedLineViewState extends State<FixedLineView> {
     super.dispose();
   }
 
-  /// Material default scrollbar thickness, used when the theme leaves
-  /// [ScrollbarThemeData.thickness] unset. Mirrors the Material
-  /// `Scrollbar` desktop/web default.
-  static const double _kDefaultScrollbarThickness = 8.0;
-
-  /// Trailing gutter width to reserve for the scrollbar lane.
-  ///
-  /// `null` auto-derives from the effective [ScrollbarThemeData.thickness]
-  /// (the same source the ambient [Scrollbar] renders from), falling back
-  /// to [_kDefaultScrollbarThickness].
   double _resolveScrollbarGutter() =>
-      widget.scrollbarGutter ??
-      ScrollbarTheme.of(context).thickness?.resolve(const <WidgetState>{}) ??
-      _kDefaultScrollbarThickness;
+      widget.scrollbarGutter ?? FixedLineView.defaultScrollbarGutter;
 
   @override
   Widget build(BuildContext context) {
@@ -298,7 +295,10 @@ class _FixedLineViewState extends State<FixedLineView> {
     if (widget.selectable) {
       return DefaultSelectionStyle(
         selectionColor: widget.selectionColor ?? const Color(0xFF264F78),
-        child: SelectionArea(child: listView),
+        child: SelectableRegion(
+          selectionControls: emptyTextSelectionControls,
+          child: listView,
+        ),
       );
     }
 

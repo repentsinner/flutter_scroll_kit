@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_scroll_kit/sticky_hierarchical_scroll.dart';
 
 import 'console_entry.dart';
@@ -74,7 +74,8 @@ class ReplView<T extends ConsoleEntry> extends StatefulWidget {
 
   /// Trailing gutter width reserved for the scrollbar lane, forwarded
   /// verbatim to the wrapped [StickyHierarchicalScrollView]. `null`
-  /// (default) auto-derives from the theme scrollbar thickness, `0`
+  /// (default) reserves
+  /// [StickyHierarchicalScrollView.defaultScrollbarGutter], `0`
   /// disables the gutter for full-bleed, a positive value sets the width.
   /// The sticky view reserves the gutter for both scrollback rows and the
   /// pinned input header, so trailing affordances stay clear of the

@@ -50,7 +50,7 @@ library, `package:flutter_scroll_kit/<primitive>.dart`.
 
 ## Framework Dependency §spec:framework-dependency
 
-*Status: not started*
+*Status: complete*
 
 Implements §req:packaging. Every library imports Flutter through
 `package:flutter/widgets.dart` and its lower layers. No library imports
