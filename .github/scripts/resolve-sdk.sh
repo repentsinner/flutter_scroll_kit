@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Resolve the Flutter version for one `ci.yml` matrix leg.
+# Resolve the Flutter version for one `quality.yml` matrix leg.
 #
 # Neither version is written into the workflow. `floor` is the oldest SDK
 # pubspec.yaml claims to support and `pinned` is the toolchain .fvmrc names,
