@@ -124,8 +124,11 @@ conventional commits and pushes a `v<version>` tag on the release
 commit. A tag-triggered workflow publishes that tag to pub.dev.
 
 Each GitHub release carries release builds of the example app for
-Linux, macOS, and Windows, built on each platform's runner when the
-release publishes. The builds are unsigned.
+Linux, macOS, and Windows, built on each platform's runner from the
+release tag. The repository uses immutable releases, which freeze a
+release's assets once it publishes, so Flywheel creates each release
+as a draft. The build workflow attaches the builds to the draft and
+publishes it once every platform has attached. The builds are unsigned.
 
 Authentication uses OIDC against pub.dev's trusted publisher
 mechanism: the workflow exchanges a GitHub-signed OIDC token for a
