@@ -117,6 +117,13 @@ class _FixedLineViewState extends State<FixedLineView> {
   /// counts as the user scrolling away.
   bool _userScrolling = false;
 
+  /// Whether the last user-driven scroll update left the view at the
+  /// bottom. A line that arrives while the user holds the view there moves
+  /// the bottom without a scroll update, so the view rests one line short
+  /// when the sequence ends. This records that the user reached the
+  /// bottom anyway.
+  bool _userReachedBottom = false;
+
   ScrollController get _scrollController =>
       widget.controller ??
       (_internalController ??= widget.lineSnap
@@ -183,24 +190,28 @@ class _FixedLineViewState extends State<FixedLineView> {
       case UserScrollNotification(:final direction)
           when direction != ScrollDirection.idle:
         _userScrolling = true;
-        if (!_isAtBottom()) _userScrolledAway = true;
+        _userReachedBottom = _isAtBottom();
+        if (!_userReachedBottom) _userScrolledAway = true;
       // User-driven scroll in progress (including a fling's ballistic
       // coast): suppress as soon as the viewport leaves the bottom, so an
       // entry arriving mid-scroll doesn't yank it back down.
       case ScrollUpdateNotification() when _userScrolling:
-        if (!_isAtBottom()) _userScrolledAway = true;
+        _userReachedBottom = _isAtBottom();
+        if (!_userReachedBottom) _userScrolledAway = true;
       // Sequence settled. Resting at the bottom always resumes auto-scroll,
       // however we got there (user fling back, or an external controller
-      // jumping to bottom). Resting away from the bottom suppresses only
+      // jumping to bottom), and so does a user scroll whose last update was
+      // at the bottom. Resting away from the bottom suppresses only
       // when the user drove the scroll — an auto-scroll that lands short of
       // a freshly-grown extent must not be mistaken for the user leaving.
       case ScrollEndNotification():
-        if (_isAtBottom()) {
+        if (_isAtBottom() || (_userScrolling && _userReachedBottom)) {
           _userScrolledAway = false;
         } else if (_userScrolling) {
           _userScrolledAway = true;
         }
         _userScrolling = false;
+        _userReachedBottom = false;
       default:
         break;
     }

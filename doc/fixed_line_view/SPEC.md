@@ -44,7 +44,9 @@ viewport center.
 arrives, scroll to keep the bottom visible. The widget tracks a
 `userScrolledAway` flag: once the user manually scrolls above the
 bottom edge, auto-scroll suppresses until the user scrolls back to the
-bottom. Standard log-viewer behavior.
+bottom. A user scroll whose last update reached the bottom resumes
+following, even when content that arrived before the scroll ended left
+the view one line short. Standard log-viewer behavior.
 
 `AutoScrollBehavior.none` disables both. The viewer sits still and
 respects only explicit programmatic scroll.
@@ -205,6 +207,7 @@ Unit tests cover:
   line leaves the offset unchanged.
 - `AutoScrollBehavior.bottom` suppression and resume: a user drag away
   from the bottom suppresses auto-follow on new content; a user drag
-  back to the bottom resumes it.
+  back to the bottom resumes it, including when a line arrives while the
+  drag holds the view at the bottom.
 
 Tests run on the Flutter widget test runner.
