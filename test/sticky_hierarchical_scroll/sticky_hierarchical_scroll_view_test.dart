@@ -625,8 +625,9 @@ void main() {
       for (int i = 1; i <= 20; i++) _TestItem('item $i', 1), // idx 1..20
     ];
 
-    // The default Material scrollbar thickness used as the auto fallback.
-    const double materialThickness = 8.0;
+    // The gutter the view reserves when scrollbarGutter is null.
+    const double defaultGutter =
+        StickyHierarchicalScrollView.defaultScrollbarGutter;
     const double viewportWidth = 300.0;
 
     /// Builds a harness whose rows and sticky header each carry a trailing
@@ -693,25 +694,26 @@ void main() {
       );
     }
 
-    testWidgets('default gutter insets the inner ListView by theme thickness', (
-      tester,
-    ) async {
-      final controller = ScrollController();
-      addTearDown(controller.dispose);
+    testWidgets(
+      'default gutter insets the inner ListView by the default gutter',
+      (tester) async {
+        final controller = ScrollController();
+        addTearDown(controller.dispose);
 
-      await tester.pumpWidget(
-        buildGutterHarness(scrollbarGutter: null, controller: controller),
-      );
-      await tester.pump();
+        await tester.pumpWidget(
+          buildGutterHarness(scrollbarGutter: null, controller: controller),
+        );
+        await tester.pump();
 
-      // The trailing edge of a row's content must clear the scroll lane:
-      // the row's right edge sits at viewportWidth - gutter.
-      final btn = tester.getRect(find.byKey(const ValueKey('row_btn_0')));
-      expect(
-        btn.right,
-        moreOrLessEquals(viewportWidth - materialThickness, epsilon: 0.5),
-      );
-    });
+        // The trailing edge of a row's content must clear the scroll lane:
+        // the row's right edge sits at viewportWidth - gutter.
+        final btn = tester.getRect(find.byKey(const ValueKey('row_btn_0')));
+        expect(
+          btn.right,
+          moreOrLessEquals(viewportWidth - defaultGutter, epsilon: 0.5),
+        );
+      },
+    );
 
     testWidgets('default gutter insets the sticky-header overlay', (
       tester,
@@ -734,7 +736,7 @@ void main() {
       );
       expect(
         headerBtn.right,
-        moreOrLessEquals(viewportWidth - materialThickness, epsilon: 0.5),
+        moreOrLessEquals(viewportWidth - defaultGutter, epsilon: 0.5),
       );
     });
 
@@ -820,7 +822,7 @@ void main() {
       expect(headerBtn.right, moreOrLessEquals(viewportWidth, epsilon: 0.5));
     });
 
-    testWidgets('gutter tracks a custom ScrollbarThemeData thickness', (
+    testWidgets('gutter ignores a Material ScrollbarThemeData thickness', (
       tester,
     ) async {
       final controller = ScrollController();
@@ -866,7 +868,10 @@ void main() {
       final probe = tester.getRect(find.byKey(const ValueKey('probe_0')));
       expect(
         probe.right,
-        moreOrLessEquals(viewportWidth - customThickness, epsilon: 0.5),
+        moreOrLessEquals(
+          viewportWidth - StickyHierarchicalScrollView.defaultScrollbarGutter,
+          epsilon: 0.5,
+        ),
       );
     });
   });

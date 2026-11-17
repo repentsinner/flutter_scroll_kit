@@ -3,8 +3,9 @@ import 'package:flutter_scroll_kit/repl_view.dart';
 import 'package:flutter_scroll_kit/sticky_hierarchical_scroll.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// The default Material scrollbar thickness used as the auto fallback.
-const double _materialThickness = 8.0;
+/// The gutter the view reserves when scrollbarGutter is null.
+const double _defaultGutter =
+    StickyHierarchicalScrollView.defaultScrollbarGutter;
 const double _viewportWidth = 300.0;
 const double _viewportHeight = 200.0;
 const double _itemExtent = 20.0;
@@ -92,7 +93,7 @@ List<_Entry> _entries() {
 
 void main() {
   group('ReplView scrollbar gutter', () {
-    testWidgets('default gutter insets scrollback rows by theme thickness', (
+    testWidgets('default gutter insets scrollback rows by the default gutter', (
       tester,
     ) async {
       final controller = ScrollController();
@@ -110,7 +111,7 @@ void main() {
       final btn = tester.getRect(find.byKey(const ValueKey('btn_resp-29')));
       expect(
         btn.right,
-        moreOrLessEquals(_viewportWidth - _materialThickness, epsilon: 0.5),
+        moreOrLessEquals(_viewportWidth - _defaultGutter, epsilon: 0.5),
       );
     });
 
@@ -165,7 +166,7 @@ void main() {
       final headerRect = tester.getRect(headerBtn.first);
       expect(
         headerRect.right,
-        moreOrLessEquals(_viewportWidth - _materialThickness, epsilon: 0.5),
+        moreOrLessEquals(_viewportWidth - _defaultGutter, epsilon: 0.5),
       );
 
       await tester.tap(headerBtn.first);

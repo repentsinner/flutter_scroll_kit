@@ -3,7 +3,10 @@
 Composable Flutter scroll primitives that extend the built-in
 `ScrollView` family with line-snap ballistics, hierarchical sticky
 headers, virtualized fixed-height lines, and REPL-shaped scrollback.
-The package depends only on Flutter.
+The package depends only on Flutter's widgets layer, so it works under
+any app root: `MaterialApp` from `flutter/material` or `material_ui`,
+`CupertinoApp`, or a plain `WidgetsApp`. Scrollbars come from the
+host's `ScrollBehavior`, so the host's design system draws them.
 
 ![The example app touring each primitive: a code view that scrolls by whole lines, nested sticky headers, a live log that follows its tail, and a REPL running a command](https://raw.githubusercontent.com/repentsinner/flutter_scroll_kit/main/doc/tour.avif)
 
@@ -119,6 +122,7 @@ StickyHierarchicalScrollView<MyItem>(
 | `physics` | Scroll physics. Defaults to the platform's. |
 | `onStickyHeaderTap` | Custom tap handler, which replaces the default scroll-to. |
 | `itemKey` | Optional unique, stable identity of an item. When set, rows follow their item when the list shifts instead of rebuilding. |
+| `scrollbarGutter` | Trailing width kept clear for the scrollbar, in rows and pinned headers. Defaults to `StickyHierarchicalScrollView.defaultScrollbarGutter`, 8.0; `0` turns it off. Set it when your scrollbar is wider or narrower. |
 
 `StickyScrollConfig` takes these properties:
 
@@ -175,9 +179,10 @@ StreamLineView<LogEvent>(
 | `controller` | Optional external `ScrollController`. |
 | `physics` | Optional scroll physics. Pair with `LineSnapScrollPhysics` for snap behavior. |
 | `emptyBuilder` | Widget shown when `lineCount == 0`. |
-| `selectable` | Wraps the view in `SelectionArea` for cross-line text selection. |
+| `selectable` | Wraps the view in a `SelectableRegion` for cross-line selection and keyboard copy, with no handles or context menu. For your design system's, leave this off and wrap the view in its `SelectionArea`. |
 | `selectionColor` | Selection highlight color when `selectable` is true. |
 | `lineSnap` | Turns on line-snap physics without a custom `physics`. |
+| `scrollbarGutter` | Trailing width kept clear for the scrollbar. Defaults to `FixedLineView.defaultScrollbarGutter`, 8.0; `0` turns it off. Set it when your scrollbar is wider or narrower. |
 
 `StreamLineView` takes `itemStream`, `initialItems`, `maxLines` (null
 means unlimited), `itemExtent`, and `itemBuilder`. Its `autoScroll`
@@ -272,6 +277,7 @@ The viewport has two states:
 | `physics` | Scroll physics. Defaults to the platform's. |
 | `trailingItemCount` | Number of rows appended after the entries, such as a prompt line. |
 | `trailingItemBuilder` | Builds the trailing rows, which scroll with the content. |
+| `scrollbarGutter` | Trailing width kept clear for the scrollbar. Defaults to 8.0; `0` turns it off. Set it when your scrollbar is wider or narrower. |
 
 `ReplView` doesn't deduplicate entries. It reads the supplied `count`,
 so the consumer chooses what counts as a repeat. Inputs render as

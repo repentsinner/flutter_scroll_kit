@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_scroll_kit/fixed_line_view.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// The default Material scrollbar thickness used as the auto fallback.
-const double _materialThickness = 8.0;
+/// The gutter the view reserves when scrollbarGutter is null.
+const double _defaultGutter = FixedLineView.defaultScrollbarGutter;
 const double _viewportWidth = 300.0;
 const double _itemExtent = 20.0;
 
@@ -47,7 +47,7 @@ Widget _gutterHarness({
 
 void main() {
   group('FixedLineView scrollbar gutter', () {
-    testWidgets('default gutter insets the ListView by theme thickness', (
+    testWidgets('default gutter insets the ListView by the default gutter', (
       tester,
     ) async {
       final controller = ScrollController();
@@ -63,7 +63,7 @@ void main() {
       final btn = tester.getRect(find.byKey(const ValueKey('row_btn_0')));
       expect(
         btn.right,
-        moreOrLessEquals(_viewportWidth - _materialThickness, epsilon: 0.5),
+        moreOrLessEquals(_viewportWidth - _defaultGutter, epsilon: 0.5),
       );
     });
 
@@ -119,7 +119,7 @@ void main() {
       expect(btn.right, moreOrLessEquals(_viewportWidth, epsilon: 0.5));
     });
 
-    testWidgets('gutter tracks a custom ScrollbarThemeData thickness', (
+    testWidgets('gutter ignores a Material ScrollbarThemeData thickness', (
       tester,
     ) async {
       final controller = ScrollController();
@@ -159,7 +159,10 @@ void main() {
       final probe = tester.getRect(find.byKey(const ValueKey('probe_0')));
       expect(
         probe.right,
-        moreOrLessEquals(_viewportWidth - customThickness, epsilon: 0.5),
+        moreOrLessEquals(
+          _viewportWidth - FixedLineView.defaultScrollbarGutter,
+          epsilon: 0.5,
+        ),
       );
     });
 
