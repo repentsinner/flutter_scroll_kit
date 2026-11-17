@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart' show precisionErrorTolerance;
-import 'package:flutter/material.dart';
 import 'package:flutter_scroll_kit/line_snap_scroll_physics.dart';
 import 'package:flutter_scroll_kit_example/main.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 const Duration _tick = Duration(milliseconds: 50);
 const Duration _patience = Duration(minutes: 2);

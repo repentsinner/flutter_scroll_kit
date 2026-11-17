@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_scroll_kit_example/main.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   testWidgets('a command typed at the prompt runs on Enter', (tester) async {

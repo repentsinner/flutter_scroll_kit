@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_scroll_kit/repl_view.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'demo_caption.dart';
 
