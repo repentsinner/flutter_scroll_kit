@@ -103,6 +103,13 @@ tab per primitive. It depends on the package by path and keeps its own
 `pubspec.lock`. A widget test in `example/test/` opens each tab and
 finds that tab's primitive.
 
+The example builds on `material_ui`, the standalone Material library
+that replaces the in-framework `flutter/material`, so it exercises the
+primitives under the host app those consumers run
+(§spec:framework-dependency).
+`material_ui` needs Flutter 3.47 or later, so the example's SDK floor
+sits above the package's.
+
 The example carries no platform folders. `flutter create .` in
 `example/` generates them.
 
@@ -122,8 +129,10 @@ flutter test && (cd example && flutter test)
 ```
 
 These are the commands CI runs. Analysis covers both trees, so both
-need resolving first. CI runs every check against two SDKs: the
-`.fvmrc` pin and the Flutter floor in `pubspec.yaml`.
+need resolving first. CI runs the package's checks against two SDKs:
+the `.fvmrc` pin and the Flutter floor in `pubspec.yaml`. The example
+needs a newer Flutter than that floor (§spec:example-app), so its
+analysis and tests run on the pin only.
 
 ## Origin and License §spec:origin-and-license
 

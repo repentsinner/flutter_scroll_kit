@@ -3,13 +3,18 @@ description: Demo app for flutter_scroll_kit, with one tab per primitive.
 publish_to: none
 
 environment:
-  sdk: ^3.10.0
+  # material_ui, the standalone Material library, needs Flutter 3.47 or
+  # later. The package keeps its lower floor, because it builds on
+  # flutter/widgets only.
+  sdk: ^3.13.0
+  flutter: ">=3.47.0"
 
 dependencies:
   flutter:
     sdk: flutter
   flutter_scroll_kit:
     path: ../
+  material_ui: ^1.11.1
 
 dev_dependencies:
   flutter_test:

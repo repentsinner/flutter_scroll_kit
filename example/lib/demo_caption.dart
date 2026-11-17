@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Shows a demo above a one-line caption naming the library it uses and
 /// what that library does.

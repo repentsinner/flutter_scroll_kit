@@ -56,21 +56,25 @@ jobs:
           flutter-version: ${{ steps.sdk.outputs.version }}
           cache: true
       # The example depends on the package by path and keeps its own
-      # lockfile, so it resolves separately. Analysis covers both trees and
-      # needs both resolved.
+      # lockfile, so it resolves separately. It builds on material_ui,
+      # which needs a newer Flutter than the package floor, so only the
+      # pinned leg resolves and analyzes it.
       - name: Install dependencies
+        env:
+          MATRIX_SDK: ${{ matrix.sdk }}
         run: |
           flutter pub get
-          (cd example && flutter pub get)
+          if [ "$MATRIX_SDK" = pinned ]; then (cd example && flutter pub get); fi
       # dart format output can change between SDK releases, so formatting
       # is held to the toolchain the repo develops on.
       - name: Format check
         if: matrix.sdk == 'pinned'
         run: dart format --output=none --set-exit-if-changed .
       # The floor analyzer predates some lints the pinned one enforces, so
-      # infos are fatal only on the pinned leg.
+      # infos are fatal only on the pinned leg. The floor leg analyzes the
+      # package's own sources, since the example is unresolved there.
       - name: Analyze
-        run: dart analyze ${{ matrix.sdk == 'pinned' && '--fatal-infos' || '' }}
+        run: dart analyze ${{ matrix.sdk == 'pinned' && '--fatal-infos' || 'lib test' }}
 
   test-package:
     needs: classify
@@ -103,10 +107,12 @@ jobs:
     needs: classify
     if: needs.classify.outputs.derived_release_commit != 'true' && needs.classify.outputs.promotion_pr != 'true'
     runs-on: ubuntu-latest
+    # The example builds on material_ui, which needs a newer Flutter than
+    # the package floor, so it runs on the pinned SDK only.
     strategy:
       fail-fast: false
       matrix:
-        sdk: [floor, pinned]
+        sdk: [pinned]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
