@@ -8,9 +8,9 @@ void main() {
     await tester.pumpWidget(const ScrollKitDemo());
 
     final tabs = <String, bool Function(Widget)>{
-      'Line snap': (w) => w is Scrollable && w.physics is LineSnapScrollPhysics,
+      'Code view': (w) => w is Scrollable && w.physics is LineSnapScrollPhysics,
       'Sticky headers': (w) => w is StickyHierarchicalScrollView<Object?>,
-      'Fixed lines': (w) => w is FixedLineView,
+      'Log stream': (w) => w is FixedLineView,
       'REPL': (w) => w is ReplView<ConsoleEntry>,
     };
     for (final MapEntry(key: label, value: isPrimitive) in tabs.entries) {

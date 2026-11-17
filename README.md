@@ -5,6 +5,8 @@ Composable Flutter scroll primitives that extend the built-in
 headers, virtualized fixed-height lines, and REPL-shaped scrollback.
 The package depends only on Flutter.
 
+![The example app touring each primitive: a code view that scrolls by whole lines, nested sticky headers, a live log that follows its tail, and a REPL running a command](https://raw.githubusercontent.com/repentsinner/flutter_scroll_kit/main/doc/tour.avif)
+
 ## Install
 
 ```sh
@@ -278,7 +280,10 @@ of two.
 
 ## Example
 
-`example/` is one app with a tab per primitive:
+`example/` is one app with a tab per primitive. On a desktop platform,
+`flutter run -a --tour` loops through every tab with scripted drags and
+typing, which is how the animation at the top of this page was
+recorded.
 
 ```sh
 cd example
