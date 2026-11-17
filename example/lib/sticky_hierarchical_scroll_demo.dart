@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_scroll_kit/sticky_hierarchical_scroll.dart';
 
+import 'demo_caption.dart';
+
 class _DemoItem {
   final String label;
   final int level;
@@ -21,8 +23,10 @@ class StickyHierarchicalScrollDemo extends StatelessWidget {
 
     final bgColor = Theme.of(context).scaffoldBackgroundColor;
 
-    return Scaffold(
-      body: StickyHierarchicalScrollView<_DemoItem>(
+    return DemoCaption(
+      library: 'sticky_hierarchical_scroll',
+      summary: 'nested section headers stack as their scope scrolls past',
+      child: StickyHierarchicalScrollView<_DemoItem>(
         items: items,
         // Levels are 0-based: top-level projects are level 0, their
         // children level 1, and so on down the tree.

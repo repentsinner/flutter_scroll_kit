@@ -321,6 +321,41 @@ void main() {
       expect(controller.offset, controller.position.maxScrollExtent);
     });
 
+    testWidgets('resumes auto-scroll when a drag reaches the bottom as a '
+        'line arrives', (tester) async {
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(_bottomView(controller, 100));
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(FixedLineView), const Offset(0, 200));
+      await tester.pumpAndSettle();
+
+      // Drag back down past the bottom, so the offset pins at the end.
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.byType(FixedLineView)),
+      );
+      for (var ms = 100; ms <= 1000; ms += 100) {
+        await gesture.moveBy(
+          const Offset(0, -40),
+          timeStamp: Duration(milliseconds: ms),
+        );
+        await tester.pump();
+      }
+      expect(controller.offset, controller.position.maxScrollExtent);
+
+      // A line arrives while the finger is still down, moving the bottom
+      // one line further on, and the finger lifts.
+      await tester.pumpWidget(_bottomView(controller, 101));
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      // The user brought the view to the bottom, so the log follows again.
+      await tester.pumpWidget(_bottomView(controller, 102));
+      await tester.pumpAndSettle();
+      expect(controller.offset, controller.position.maxScrollExtent);
+    });
+
     testWidgets('uses external ScrollController when provided', (tester) async {
       final controller = ScrollController();
       addTearDown(controller.dispose);

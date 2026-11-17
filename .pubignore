@@ -17,3 +17,7 @@ example/windows/
 
 # Vale prose-lint styles for contributors.
 styles/
+
+# README animation, linked from the README by URL. Every package download
+# would otherwise carry it.
+doc/tour.avif
