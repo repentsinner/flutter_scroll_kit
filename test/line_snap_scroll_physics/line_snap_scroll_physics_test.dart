@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart' show kTouchSlop;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_scroll_kit/line_snap_scroll_physics.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -243,6 +244,116 @@ void main() {
 
       await gesture.up();
       await tester.pumpAndSettle();
+    });
+
+    // A slow drag delivers many moves shorter than half a line. Each one
+    // rounds to the same boundary on its own, so the controller has to
+    // carry the unrounded offset between moves for the drag to go anywhere.
+    group('slow drag', () {
+      const viewport = 150.0;
+      const step = 2.0;
+      const steps = 100;
+      const distance = step * steps;
+      // The drag recognizer keeps the touch slop, and rounding can land up
+      // to half a line either side.
+      const tolerance = kTouchSlop + itemExtent;
+      const center = Offset(400, 300);
+
+      Future<void> moveSlowly(
+        WidgetTester tester,
+        TestGesture gesture,
+        LineSnapScrollController controller,
+        double dy,
+      ) async {
+        for (var i = 0; i < steps; i++) {
+          await gesture.moveBy(Offset(0, dy));
+          await tester.pump();
+          // The invariant holds away from the scroll boundaries, where the
+          // offset clamps.
+          final position = controller.position;
+          if (position.pixels > position.minScrollExtent &&
+              position.pixels < position.maxScrollExtent) {
+            _expectBottomAligned(controller);
+          }
+        }
+      }
+
+      testWidgets('follows the finger', (WidgetTester tester) async {
+        final controller = await _pumpSizedList(
+          tester,
+          itemExtent: itemExtent,
+          viewportHeight: viewport,
+        );
+        final start = controller.offset;
+
+        final gesture = await tester.startGesture(center);
+        await moveSlowly(tester, gesture, controller, -step);
+
+        expect(controller.offset - start, closeTo(distance, tolerance));
+        await gesture.up();
+      });
+
+      testWidgets('follows the finger when the first boundary is below zero', (
+        WidgetTester tester,
+      ) async {
+        // 145 / 20 rounds to 7 lines, so the boundary nearest offset 0 is
+        // 7 * 20 - 145 = -5, which clamps to 0.
+        const shortViewport = 145.0;
+        final controller = await _pumpSizedList(
+          tester,
+          itemExtent: itemExtent,
+          viewportHeight: shortViewport,
+        );
+        final start = controller.offset;
+
+        final gesture = await tester.startGesture(center);
+        await moveSlowly(tester, gesture, controller, -step);
+
+        expect(controller.offset - start, closeTo(distance, tolerance));
+        await gesture.up();
+      });
+
+      testWidgets('returns to the start when dragged back', (
+        WidgetTester tester,
+      ) async {
+        final controller = await _pumpSizedList(
+          tester,
+          itemExtent: itemExtent,
+          viewportHeight: viewport,
+        );
+        controller.jumpTo(itemExtent * 50);
+        await tester.pump();
+        final start = controller.offset;
+
+        final gesture = await tester.startGesture(center);
+        await moveSlowly(tester, gesture, controller, -step);
+        await moveSlowly(tester, gesture, controller, step);
+
+        expect(controller.offset, closeTo(start, itemExtent));
+        await gesture.up();
+      });
+
+      testWidgets('scrolls at once when reversed after pulling past the top', (
+        WidgetTester tester,
+      ) async {
+        final controller = await _pumpSizedList(
+          tester,
+          itemExtent: itemExtent,
+          viewportHeight: viewport,
+        );
+        final start = controller.offset;
+
+        final gesture = await tester.startGesture(center);
+        // Pull down past the top, where the offset clamps.
+        await moveSlowly(tester, gesture, controller, step);
+        expect(controller.offset, start);
+        // Reverse: the list scrolls with the finger, not after the finger
+        // has unwound the clamped distance.
+        await moveSlowly(tester, gesture, controller, -step);
+
+        expect(controller.offset - start, closeTo(distance, tolerance));
+        await gesture.up();
+      });
     });
   });
 

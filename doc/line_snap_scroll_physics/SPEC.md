@@ -47,7 +47,11 @@ alone or both together. Using both is the strongest guarantee:
 
 - `LineSnapScrollController` rounds every `setPixels` call. Any
   fractional offset produced by drag, fling, or `jumpTo` is quantized
-  before it reaches paint.
+  before it reaches paint. During a drag the position carries the
+  unrounded offset from one move to the next and paints the rounded
+  one, so a drag moves the list by the distance dragged, to within half
+  a line. At a scroll boundary the carried offset resets to the clamped
+  one, so a reversed drag scrolls at once.
 - `LineSnapScrollPhysics` targets item boundaries at the end of
   ballistic simulations. Without the controller, paint can still see
   fractional pixels mid-fling; with it, every frame is aligned.
@@ -92,7 +96,9 @@ Unit tests cover:
 
 - Quantization: `setPixels` holds line-aligned offsets across drag,
   fling (including every frame of the fling animation), and `jumpTo`;
-  settling rounds to the nearest boundary.
+  settling rounds to the nearest boundary. A slow drag of moves shorter
+  than half a line follows the finger, returns to its start when
+  reversed, and scrolls at once when reversed past the top.
 - `ScrollMode.pixel` scrolls without snapping; `applyTo` preserves
   `itemExtent` and mode.
 - Bottom-alignment invariant `(offset + viewportDimension) mod
